@@ -1,0 +1,520 @@
+/* --- 1. CORE & LAYOUT --- */
+body { font-family: sans-serif; margin: 0; background: #f4f7f6; overflow-x: hidden; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+/* --- 2. HEADER & NAVIGATION (MERGED) --- */
+.business-nav {
+    background: white;
+    padding: 0; /* Let nav-container handle height */
+    border-bottom: 2px solid #f1f1f1;
+    position: sticky;
+    top: 0;
+    z-index: 2000;
+}
+
+.nav-container { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 0 20px; 
+    height: 80px; 
+}
+
+.logo-link { display: flex; align-items: center; text-decoration: none; gap: 8px; }
+#main-logo { height: 60px; width: auto; transition: 0.3s; }
+
+.brand-text { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-text .navy { color: #1e00ff; font-weight: 800; font-size: 16px; }
+.brand-text .green { color: #27ae60; font-weight: 800; font-size: 16px; }
+
+/* Desktop Navigation */
+.nav-links { display: flex; list-style: none; gap: 15px; margin: 0; padding: 0; align-items: center; }
+.nav-links li a { text-decoration: none; color: #2c3e50; font-weight: 700; font-size: 13px; transition: 0.3s; }
+.nav-links li a:hover { color: #27ae60; }
+
+/* Header Dropdown Logic */
+.dropdown { position: relative; }
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background: white;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    list-style: none;
+    padding: 10px;
+    min-width: 150px;
+    border-radius: 8px;
+    top: 100%;
+}
+.dropdown:hover .dropdown-menu { display: block; }
+
+/* --- 3. HERO SECTION --- */
+.hero-section { 
+    background: linear-gradient(rgba(44, 62, 80, 0.7), rgba(44, 62, 80, 0.7)), 
+    url('https://images.unsplash.com/photo-1596733430284-f7437764b1a9?q=80&w=1200') center/cover no-repeat; 
+    height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center; color: white; 
+}
+.hero-content h1 { font-size: 3.5rem; margin-bottom: 15px; }
+.cta-button { background-color: #27ae60; color: white; padding: 15px 35px; text-decoration: none; font-size: 1.2rem; border-radius: 8px; font-weight: bold; display: inline-block; }
+
+/* --- 4. COMPONENT GRIDS (Pharmacy & Academy) --- */
+.product-grid, .course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 20px 0; }
+
+.product-card, .course-card { 
+    background: white; border-radius: 12px; padding: 15px; border: 1px solid #eee; 
+    transition: 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center;
+}
+.product-card:hover { transform: translateY(-8px); }
+.product-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+.price { font-size: 1.5rem; color: #27ae60; font-weight: 800; }
+
+/* --- 5. AUTH, LANGUAGE & CART --- */
+.nav-auth-wrapper { display: flex; align-items: center; gap: 15px; }
+#login-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+#google_translate_element { height: 38px; overflow: hidden; }
+#google_translate_element select { background: #f4f7f6; border: 1px solid #ddd; padding: 5px; border-radius: 5px; font-weight: bold; }
+.goog-logo-link, .goog-te-gadget span { display: none !important; }
+
+.cart-icon-wrapper { position: relative; text-decoration: none; font-size: 22px; }
+#cart-badge { position: absolute; top: -8px; right: -10px; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; font-weight: bold; border: 2px solid white; }
+
+/* --- 6. SIDE FLOATING BUTTON & ANIMATIONS --- */
+.side-enquiry {
+    position: fixed; right: -45px; top: 50%; transform: rotate(-90deg) translateY(-50%);
+    background: #27ae60; color: white; padding: 12px 25px; border-radius: 10px 10px 0 0;
+    cursor: pointer; font-weight: bold; z-index: 2000; box-shadow: -4px 0 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease; animation: sidePulse 2s infinite;
+}
+.side-enquiry:hover { right: -35px; background: #1e8449; animation: none; }
+
+@keyframes sidePulse {
+    0% { box-shadow: -4px 0 0 rgba(39, 174, 96, 0.4); }
+    70% { box-shadow: -4px 0 15px rgba(39, 174, 96, 0); }
+    100% { box-shadow: -4px 0 0 rgba(39, 174, 96, 0); }
+}
+
+/* --- 7. FOOTER --- */
+.main-footer { background: #2c3e50; color: white; padding: 60px 20px 20px; margin-top: 50px; }
+.footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; max-width: 1200px; margin: 0 auto; }
+.footer-col h3, .footer-col h4 { color: #27ae60; margin-bottom: 20px; }
+.footer-col ul { list-style: none; padding: 0; }
+.footer-col ul li a { color: #bdc3c7; text-decoration: none; transition: 0.3s; }
+.footer-col ul li a:hover { color: white; }
+
+/* --- 8. MOBILE RESPONSIVE --- */
+.menu-toggle { display: none; flex-direction: column; cursor: pointer; gap: 5px; z-index: 2100; }
+.menu-toggle .bar { width: 25px; height: 3px; background-color: #2c3e50; border-radius: 5px; transition: 0.3s; }
+
+@media screen and (max-width: 1024px) {
+    .menu-toggle { display: flex; }
+    .nav-links {
+        position: fixed; right: -100%; top: 80px; flex-direction: column;
+        background: white; width: 100%; height: calc(100vh - 80px);
+        text-align: center; transition: 0.4s; box-shadow: 0 10px 10px rgba(0,0,0,0.1); padding: 40px 0;
+    }
+    .nav-links.active { right: 0; }
+    .nav-links li { margin: 20px 0; }
+    #google_translate_element { transform: scale(0.85); }
+}
+
+/* --- 9. PRINT REPORT --- */
+@media print {
+    nav, .menu-toggle, .side-enquiry, button, #product-search, .nav-auth-wrapper { display: none !important; }
+    body { background: white; color: black; font-size: 12pt; }
+    h1::before { content: "DAIRY DEVELOPMENT PROGRAMME SAHARSA - OFFICIAL REPORT"; display: block; font-size: 18px; color: #27ae60; margin-bottom: 15px; border-bottom: 2px solid #27ae60; }
+    section { box-shadow: none !important; border: 1px solid #eee !important; margin-bottom: 20px !important; page-break-inside: avoid; }
+}
+/* --- PHARMACY & ACADEMY SHARED GRID --- */
+#pharmacy-home, #academy-home, #live-product-grid, #live-course-grid {
+    padding: 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.product-grid, .course-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 20px;
+}
+
+/* --- CARD DESIGN (Both Pharmacy & Academy) --- */
+.product-card, .course-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    border: 1px solid #f1f1f1;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.product-card:hover, .course-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+/* --- IMAGE STYLING --- */
+.product-card img, .course-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+/* --- TEXT & PRICE --- */
+.product-card h3, .course-card h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.product-card .price {
+    font-size: 1.4rem;
+    color: #27ae60;
+    font-weight: 800;
+    margin-bottom: 15px;
+}
+
+/* --- BUTTONS --- */
+.product-card button, .enroll-btn {
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    width: 100%;
+    margin-top: auto; /* Pushes button to bottom of card */
+}
+
+.product-card button:hover {
+    background-color: #27ae60;
+}
+
+.enroll-btn {
+    background-color: #2980b9;
+}
+
+.enroll-btn:hover {
+    background-color: #3498db;
+}
+
+/* --- SECTION HEADINGS --- */
+.section-title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+/* --- VIEW ALL / GO TO SHOP BUTTONS --- */
+.view-all-btn {
+    display: inline-block;
+    background: transparent;
+    color: #27ae60;
+    border: 2px solid #27ae60;
+    padding: 8px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.view-all-btn:hover {
+    background-color: #27ae60;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2);
+}
+
+/* Ensure the titles and buttons stay on one line */
+#academy-home div[style*="display: flex"], 
+#pharmacy-home div[style*="display: flex"] {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto 30px;
+    padding: 0 10px;
+}
+/* --- FARMER DASHBOARD STYLES --- */
+.dash-menu li {
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #2c3e50;
+    transition: 0.3s;
+}
+
+.dash-menu li:hover { background: #e9ecef; }
+.dash-menu li.active-tab { background: #27ae60; color: white; }
+
+.dash-input {
+    width: 100%; padding: 12px; margin-top: 5px;
+    border: 1px solid #ddd; border-radius: 5px; font-size: 14px;
+    box-sizing: border-box;
+}
+.dash-input:focus { border-color: #27ae60; outline: none; }
+
+.dash-list-item {
+    background: #f9f9f9; padding: 15px; border-radius: 8px;
+    margin-bottom: 15px; border-left: 4px solid #ddd;
+    display: flex; justify-content: space-between; align-items: center;
+}
+/* Mobile Responsive Fix for Posters/Hero Images */
+@media (max-width: 768px) {
+    .hero-poster, .poster-container img {
+        width: 100% !important;
+        height: auto !important; /* This prevents stretching */
+        max-height: 250px; /* Adjust this to your preferred mobile height */
+        object-fit: cover; /* Keeps the aspect ratio clean */
+    }
+
+    .hero-section {
+        padding: 10px 0; /* Reduces extra spacing on mobile */
+    }
+}
+@media (max-width: 768px) {
+    /* Target the specific class of your poster/banner */
+    .hero-poster, .banner-img { 
+        width: 100%;
+        height: 250px !important; /* Forces a reasonable height */
+        object-fit: cover; /* Crops the top/bottom so it stays sharp */
+        object-position: center; /* Ensures the middle of the poster is visible */
+    }
+}
+.academy-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    padding: 20px;
+}
+
+.video-placeholder {
+    background: #000;
+    aspect-ratio: 16 / 9;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.lecture-scroll-box {
+    max-height: 500px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.lecture-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.lecture-item:hover { background: #eef2f7; }
+
+@media (max-width: 768px) {
+    .academy-container { grid-template-columns: 1fr; }
+    .video-placeholder { height: 200px; } /* Fixed height for mobile */
+}
+/* --- Mobile Menu Reset --- */
+@media (max-width: 991px) {
+    .nav-links {
+        display: none; /* Hide by default on mobile */
+        flex-direction: column;
+        position: absolute;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        background: white;
+        padding: 20px;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    /* Show menu when active */
+    .nav-links.active {
+        display: flex;
+    }
+
+    /* --- Services Dropdown for Mobile --- */
+    .dropdown-menu {
+        display: none; /* Hide sub-menu */
+        position: static;
+        box-shadow: none;
+        padding-left: 20px;
+        background: #f9f9f9;
+    }
+
+    /* Show sub-menu when active */
+    .dropdown.show-submenu .dropdown-menu {
+        display: block;
+    }
+
+    .dropdown a::after {
+        content: " ▾";
+    }
+}
+@media (max-width: 991px) {
+    .nav-links { display: none; flex-direction: column; width: 100%; position: absolute; top: 70px; left: 0; background: white; z-index: 1000; padding: 20px; }
+    .nav-links.active { display: flex; } /* Logic for hamburger */
+    
+    .dropdown-menu { display: none; position: static; background: #f9f9f9; }
+    .dropdown.show-submenu .dropdown-menu { display: block; } /* Logic for Services tap */
+}
+/* Emergency Bar Pulse Animation */
+.emergency-support-bar {
+    border-top: 4px solid rgba(255,255,255,0.2);
+    box-shadow: 0 -5px 20px rgba(192, 57, 43, 0.3);
+}
+
+.emergency-support-bar a:hover {
+    transform: translateY(-3px);
+    transition: 0.3s ease;
+    filter: brightness(1.1);
+}
+
+@media (max-width: 768px) {
+    .emergency-support-bar { text-align: center; }
+    .emergency-support-bar .container { justify-content: center; }
+}
+
+/* Reduce spacing between sections */
+section {
+    padding-top: 40px !important;    /* Default was likely 80px or 100px */
+    padding-bottom: 40px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Remove margin from the last element in a section to prevent double-spacing */
+section *:last-child {
+    margin-bottom: 0;
+}
+
+/* Tighten Heading gaps */
+h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+#whatsapp-floating-button a {
+    z-index: 99999 !important;
+}
+
+/* Optional: Hide on very small screens if it covers content */
+@media (max-width: 480px) {
+    #whatsapp-floating-button a {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px;
+    }
+}
+.main-footer {
+    background: #1a2a3a;
+    color: #ecf0f1;
+    padding: 60px 0 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    padding: 0 20px;
+}
+
+.footer-col h3, .footer-col h4 {
+    color: #27ae60;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.footer-col ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-col ul li {
+    margin-bottom: 10px;
+}
+
+.footer-col ul li a {
+    color: #bdc3c7;
+    text-decoration: none;
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.footer-col ul li a:hover {
+    color: #27ae60;
+    padding-left: 5px;
+}
+
+.social-icons {
+    margin: 20px 0;
+    display: flex;
+    gap: 10px;
+}
+
+.social-icon {
+    background: rgba(255,255,255,0.1);
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: white;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.creator-credit {
+    margin-top: 20px;
+    font-size: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 15px;
+}
+
+.footer-bottom {
+    margin-top: 40px;
+    padding: 20px;
+    background: #121d28;
+    font-size: 13px;
+    color: #7f8c8d;
+}
+
+.footer-bottom-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.footer-stats span {
+    margin-left: 20px;
+}
+
+@media (max-width: 768px) {
+    .footer-bottom-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}

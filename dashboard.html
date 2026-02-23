@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Portal | DDP Saharsa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-label { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .profile-input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; background: #fff; transition: 0.3s; }
+        .profile-input:focus { border-color: #27ae60; outline: none; box-shadow: 0 0 5px rgba(39,174,96,0.2); }
+        .profile-input:disabled { background: #f0f0f0; color: #888; cursor: not-allowed; }
+        .avatar-box { text-align: center; border-right: 1px solid #eee; padding-right: 20px; }
+        
+        /* Status Badges */
+        .status-badge { font-size: 10px; padding: 3px 8px; border-radius: 12px; font-weight: bold; text-transform: uppercase; }
+        .status-active { background: #e8f5e9; color: #2e7d32; }
+        .status-locked { background: #ffebee; color: #c62828; }
+        .status-pending { background: #fff3e0; color: #ef6c00; }
+
+        @media (max-width: 768px) { .avatar-box { border-right: none; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; } }
+    </style>
+</head>
+<body style="background: #f4f7f6;">
+
+    <nav class="business-nav">
+        <div class="nav-container">
+            <div class="logo-box">
+                <a href="index.html" class="logo-link">
+                    <img src="DDP logo.png" alt="Logo" id="main-logo" style="height: 40px;">
+                    <div class="brand-text"><span class="navy">DDP</span> <span class="green">Saharsa</span></div>
+                </a>
+            </div>
+            <div class="nav-auth-wrapper">
+                <span id="dash-user-name" style="font-weight: bold; color: #27ae60; margin-right: 15px;">Farmer</span>
+                <a href="index.html" style="margin-right: 15px; color: #2c3e50; font-weight: bold; text-decoration: none; font-size: 14px;">🏠 Home</a>
+                <button onclick="window.handleLogout()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <section id="user-profile" style="padding: 40px 20px; max-width: 1200px; margin: 0 auto;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="color: #2c3e50; margin: 0;">👨‍🌾 Institutional Profile</h2>
+            <span id="user-phone-id" style="font-size: 12px; color: #666; background: #eee; padding: 5px 10px; border-radius: 20px;">ID: Loading...</span>
+        </div>
+
+        <div style="background: #fff; padding: 30px; border-radius: 12px; border-top: 5px solid #27ae60; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 20px;">
+            
+            <div class="avatar-box" style="flex: 1; min-width: 200px;">
+                <img id="prof-pic-preview" src="https://via.placeholder.com/150" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #27ae60; margin-bottom: 10px;">
+                <p style="font-size: 11px; color: #666; margin-bottom: 10px;">Institutional ID Photo</p>
+                <input type="file" id="prof-pic-upload" accept="image/*" style="font-size: 11px; max-width: 100%;">
+                <input type="hidden" id="prof-pic-base64">
+            </div>
+
+            <div style="flex: 3; min-width: 300px;">
+                <div class="profile-grid">
+                    <div>
+                        <label class="form-label">Salutation & Name</label>
+                        <div style="display: flex; gap: 5px;">
+                            <select id="prof-salutation" class="profile-input" style="width: 80px;">
+                                <option>Mr.</option><option>Mrs.</option><option>Ms.</option><option>Dr.</option>
+                            </select>
+                            <input type="text" id="prof-name" class="profile-input" placeholder="Full Name">
+                        </div>
+                    </div>
+                    <div><label class="form-label">Phone Number (Permanent ID)</label><input type="text" id="prof-phone" class="profile-input" disabled></div>
+                    <div><label class="form-label">Email ID</label><input type="email" id="prof-email" class="profile-input" placeholder="email@example.com"></div>
+                    <div><label class="form-label">Date of Birth</label><input type="date" id="prof-dob" class="profile-input"></div>
+                    <div><label class="form-label">Highest Qualification</label><input type="text" id="prof-qualification" class="profile-input" placeholder="e.g. 10th Pass, B.Sc"></div>
+                    <div><label class="form-label">Current Occupation</label><input type="text" id="prof-occupation" class="profile-input" placeholder="e.g. Dairy Farmer"></div>
+                    <div><label class="form-label">State</label><input type="text" id="prof-state" class="profile-input" value="Bihar" readonly></div>
+                    <div><label class="form-label">District</label><input type="text" id="prof-district" class="profile-input" value="Saharsa" readonly></div>
+                    <div style="grid-column: span 2;"><label class="form-label">Full Address / Village</label><input type="text" id="prof-address" class="profile-input" placeholder="Village, Block, Ward..."></div>
+                </div>
+                <button onclick="window.saveExtendedProfile()" style="background: #27ae60; color: white; border: none; padding: 12px 30px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 20px; width: 100%; transition: 0.3s;">💾 Save Profile Details</button>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #2980b9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0; color: #2980b9;">📚 Academy Progress</h3>
+                    <span style="font-size: 10px; color: #666;">Real-time</span>
+                </div>
+                <div id="list-courses">
+                    <p style="font-size: 12px; color: #999;">Checking enrollments...</p>
+                </div>
+            </div>
+
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #8e44ad; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <h3 style="margin-top: 0; color: #8e44ad;">🚩 Filed Grievances</h3>
+                <div id="list-grievances" style="margin-top: 15px;">
+                    <p style="font-size: 12px; color: #999;">Loading history...</p>
+                </div>
+            </div>
+
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #27ae60; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <h3 style="margin-top: 0; color: #27ae60;">🛒 Pharmacy Orders</h3>
+                <div id="list-orders">
+                    <p style="font-size: 12px; color: #999;">Syncing orders...</p>
+                </div>
+            </div>
+
+            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #c0392b; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                <h3 style="margin-top: 0; color: #c0392b;">🚑 Vet Requests</h3>
+                <div id="list-vet">
+                    <p style="font-size: 12px; color: #999;">Loading status...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="universal-map-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: white; width: 100%; max-width: 600px; border-radius: 12px; overflow: hidden; position: relative;">
+            <div id="universal-map" style="height: 400px;"></div>
+            <div style="padding: 15px; display: flex; gap: 10px;">
+                <button onclick="window.confirmMapLocation()" style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 6px; font-weight: bold;">Confirm Location</button>
+                <button onclick="window.closeMapPicker()" style="padding: 12px; background: #eee; border: none; border-radius: 6px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script>
+        // Photo to Base64 Converter Script
+        document.getElementById('prof-pic-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file.size > 200000) { // Check for size roughly 200KB
+                Swal.fire('File too large', 'Please upload a photo smaller than 200KB', 'warning');
+                e.target.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                document.getElementById('prof-pic-preview').src = reader.result;
+                document.getElementById('prof-pic-base64').value = reader.result;
+            };
+            if (file) reader.readAsDataURL(file);
+        });
+    </script>
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <h3>DDP Saharsa</h3>
+                </div>
+                <p class="footer-address">
+                    📍 <strong>Head Office:</strong><br>
+                    Santnagar, Gangjala, Ward No. 04<br>
+                    Saharsa, Bihar - 852201
+                </p>
+                <div class="footer-map">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3591.56458426!2d86.5925!3d25.88!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ee161555555555%3A0x123456789!2sSaharsa%2C%20Bihar!5e0!3m2!1sen!2sin!4v1700000000000" width="100%" height="100" style="border:0; border-radius:8px;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="pharmacy.html">Pharmacy</a></li>
+                    <li><a href="academy.html">Academy</a></li>
+                    <li><a href="admission.html">Admission</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="franchise.html">Franchise</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Support & Legal</h4>
+                <ul>
+                    <li><a href="grievance.html">Grievance Redressal</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="terms.html">Terms of Use</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="disclaimer.html">Disclaimer</a></li>
+                    <li><a href="help.html">Help & Support</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <p>✉️ dairydevelopmentprogramshc@gmail.com</p>
+                <p>📞 +91 7782859925</p>
+                <p>🌐 www.ddpsaharsa.com</p>
+                
+                <div class="social-icons">
+                    <a href="#" class="social-icon">Facebook</a>
+                    <a href="#" class="social-icon">YouTube</a>
+                    <a href="#" class="social-icon">Twitter</a>
+                </div>
+                
+                <div class="creator-credit">
+                    <p>Designed & Created by: <strong>DDP Tech Team</strong></p>
+                </div>
+            </div>
+        </div>
+    
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2026 Dairy Development Programme. All Rights Reserved.</p>
+                <div class="footer-stats">
+                    <span>Last Updated: <strong id="last-updated">23 Feb 2026</strong></span>
+                    <span class="visitor-count">Visitors: <strong id="visitor-count">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

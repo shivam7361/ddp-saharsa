@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Franchise | DDP Saharsa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <nav class="business-nav">
+        <div class="nav-container">
+            <div class="logo-box">
+                <a href="index.html" class="logo-link">
+                    <img src="DDP logo.png" alt="Logo" id="main-logo">
+                    <div class="brand-text">
+                        <span class="navy">Dairy Development</span>
+                        <span class="green">Programme</span>
+                    </div>
+                </a>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li class="dropdown">
+                    <a href="#">Services ▾</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="pharmacy.html">Pharmacy</a></li>
+                        <li><a href="academy.html">Academy</a></li>
+                        <li><a href="vet-services.html">Vet Services</a></li>
+                    </ul>
+                </li>
+                <li><a href="admission.html">Admission</a></li>
+                <li><a href="notice.html">Notice</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="franchise.html">Franchise</a></li>
+            </ul>
+    
+            <div class="nav-auth">
+                <button id="login-btn" onclick="window.showLogin()">Login</button>
+                <span id="user-email" style="display:none;"></span>
+                <button id="logout-btn" onclick="window.handleLogout()" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header" style="background: #2c3e50; color: white; padding: 80px 20px; text-align: center;">
+        <h1>Expand with DDP</h1>
+        <p>Partner with Bihar's fastest-growing Dairy Tech network.</p>
+    </section>
+
+    <div class="container" style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+        <div style="text-align: center; margin-bottom: 50px;">
+            <h2>The Franchise Model</h2>
+            <p>We provide the branding, the tech, the medicines, and the training. You provide the local leadership.</p>
+        </div>
+
+        
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+            <div style="background: white; padding: 30px; border-radius: 15px; border: 1px solid #eee; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+                <h3 style="color: #27ae60;">What You Get</h3>
+                <ul style="padding-left: 20px;">
+                    <li>Access to our Pharmacy Supply Chain</li>
+                    <li>Centralized Veterinary Chat Support</li>
+                    <li>Marketing Materials & Branding</li>
+                    <li>Admin Dashboard for your local district</li>
+                </ul>
+            </div>
+
+            <div style="background: #f4f7f6; padding: 30px; border-radius: 15px;">
+                <h3>Apply for Franchise</h3>
+                <p>Minimum 500 sq. ft. space required.</p>
+                <input type="text" id="fran-name" class="swal2-input" placeholder="Your Name" style="width: 100%; margin: 10px 0;">
+                <input type="text" id="fran-phone" class="swal2-input" placeholder="Phone Number" style="width: 100%; margin: 10px 0;">
+                <input type="text" id="fran-city" class="swal2-input" placeholder="Proposed District" style="width: 100%; margin: 10px 0;">
+                <button onclick="window.applyFranchise()" style="width: 100%; background: #2c3e50; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer;">Send Business Proposal</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <h3>DDP Saharsa</h3>
+                </div>
+                <p class="footer-address">
+                    📍 <strong>Head Office:</strong><br>
+                    Santnagar, Gangjala, Ward No. 04<br>
+                    Saharsa, Bihar - 852201
+                </p>
+                <div class="footer-map">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3591.56458426!2d86.5925!3d25.88!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ee161555555555%3A0x123456789!2sSaharsa%2C%20Bihar!5e0!3m2!1sen!2sin!4v1700000000000" width="100%" height="100" style="border:0; border-radius:8px;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="pharmacy.html">Pharmacy</a></li>
+                    <li><a href="academy.html">Academy</a></li>
+                    <li><a href="admission.html">Admission</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="franchise.html">Franchise</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Support & Legal</h4>
+                <ul>
+                    <li><a href="grievance.html">Grievance Redressal</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="terms.html">Terms of Use</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="disclaimer.html">Disclaimer</a></li>
+                    <li><a href="help.html">Help & Support</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <p>✉️ dairydevelopmentprogramshc@gmail.com</p>
+                <p>📞 +91 7782859925</p>
+                <p>🌐 www.ddpsaharsa.com</p>
+                
+                <div class="social-icons">
+                    <a href="#" class="social-icon">Facebook</a>
+                    <a href="#" class="social-icon">YouTube</a>
+                    <a href="#" class="social-icon">Twitter</a>
+                </div>
+                
+                <div class="creator-credit">
+                    <p>Designed & Created by: <strong>DDP Tech Team</strong></p>
+                </div>
+            </div>
+        </div>
+    
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2026 Dairy Development Programme. All Rights Reserved.</p>
+                <div class="footer-stats">
+                    <span>Last Updated: <strong id="last-updated">23 Feb 2026</strong></span>
+                    <span class="visitor-count">Visitors: <strong id="visitor-count">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+</body>
+</html>

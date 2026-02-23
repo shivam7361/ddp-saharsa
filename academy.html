@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academy | DDP Saharsa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+
+    <nav class="business-nav">
+        <div class="nav-container">
+            <div class="logo-box">
+                <a href="index.html" class="logo-link">
+                    <img src="DDP logo.png" alt="Logo" id="main-logo">
+                    <div class="brand-text">
+                        <span class="navy">Dairy Development</span>
+                        <span class="green">Programme</span>
+                    </div>
+                </a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li class="dropdown">
+                    <a href="#" style="color: #2980b9;">Services ▾</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="pharmacy.html">Pharmacy</a></li>
+                        <li><a href="academy.html">Academy</a></li>
+                        <li><a href="vet-services.html">Vet Services</a></li>
+                    </ul>
+                </li>
+                <li><a href="admission.html">Admission</a></li>
+                <li><a href="notice.html">Notice</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="franchise.html">Franchise</a></li>
+            </ul>
+            <div class="nav-auth">
+                <button id="login-btn" onclick="window.showLogin()">Login</button>
+                <span id="user-email" style="display:none;"></span>
+                <button id="logout-btn" onclick="window.handleLogout()" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="page-header" style="background: #2980b9; color: white; padding: 60px 20px; text-align: center;">
+        <h1>DDP Training Academy</h1>
+        <p>Advanced courses in Cattle Management, Milk Processing & Dairy Tech.</p>
+    </section>
+
+    <div class="container" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1.2fr; gap: 30px; padding: 40px 20px;">
+        
+        <div>
+            <h2 style="margin-bottom: 20px;">Available Courses</h2>
+            <div id="live-course-grid" class="course-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <p>Loading modern dairy courses...</p>
+            </div>
+        </div>
+
+        <aside>
+            <div style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #ddd; position: sticky; top: 100px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                <h3 style="color: #2980b9; margin-top: 0;">Online Admission 2026</h3>
+                <p style="font-size: 0.9rem; color: #666;">Fill this form to apply for our upcoming residential training batch.</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Student Name</label>
+                <input type="text" id="adm-name" class="swal2-input" style="width: 100%; margin: 0 0 15px 0;" placeholder="Enter full name">
+                
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Phone Number</label>
+                <input type="text" id="adm-phone" class="swal2-input" style="width: 100%; margin: 0 0 15px 0;" placeholder="Contact number">
+
+                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Select Course</label>
+                <select id="adm-course" style="width: 100%; padding: 12px; border: 1px solid #d9d9d9; border-radius: 5px; margin-bottom: 20px;">
+                    <option value="Dairy Farm Management">Dairy Farm Management</option>
+                    <option value="Artificial Insemination">Artificial Insemination</option>
+                    <option value="Milk Quality Control">Milk Quality Control</option>
+                </select>
+
+                <button onclick="window.applyAdmission()" style="width: 100%; background: #2980b9; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Submit Application</button>
+            </div>
+        </aside>
+    </div>
+
+   
+    
+
+    <div class="side-enquiry" onclick="window.showEnquiry()"><span>📩 Enquire Now</span></div>
+    <script type="module" src="app.js"></script>
+     <script type="module" src="app.js?v=3"></script>
+     <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <h3>DDP Saharsa</h3>
+                </div>
+                <p class="footer-address">
+                    📍 <strong>Head Office:</strong><br>
+                    Santnagar, Gangjala, Ward No. 04<br>
+                    Saharsa, Bihar - 852201
+                </p>
+                <div class="footer-map">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3591.56458426!2d86.5925!3d25.88!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ee161555555555%3A0x123456789!2sSaharsa%2C%20Bihar!5e0!3m2!1sen!2sin!4v1700000000000" width="100%" height="100" style="border:0; border-radius:8px;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="pharmacy.html">Pharmacy</a></li>
+                    <li><a href="academy.html">Academy</a></li>
+                    <li><a href="admission.html">Admission</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="franchise.html">Franchise</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Support & Legal</h4>
+                <ul>
+                    <li><a href="grievance.html">Grievance Redressal</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="terms.html">Terms of Use</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="disclaimer.html">Disclaimer</a></li>
+                    <li><a href="help.html">Help & Support</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <p>✉️ dairydevelopmentprogramshc@gmail.com</p>
+                <p>📞 +91 7782859925</p>
+                <p>🌐 www.ddpsaharsa.com</p>
+                
+                <div class="social-icons">
+                    <a href="#" class="social-icon">Facebook</a>
+                    <a href="#" class="social-icon">YouTube</a>
+                    <a href="#" class="social-icon">Twitter</a>
+                </div>
+                
+                <div class="creator-credit">
+                    <p>Designed & Created by: <strong>DDP Tech Team</strong></p>
+                </div>
+            </div>
+        </div>
+    
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2026 Dairy Development Programme. All Rights Reserved.</p>
+                <div class="footer-stats">
+                    <span>Last Updated: <strong id="last-updated">23 Feb 2026</strong></span>
+                    <span class="visitor-count">Visitors: <strong id="visitor-count">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

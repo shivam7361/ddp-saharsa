@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Admission | DDP Saharsa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .adm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .adm-label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .adm-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .file-upload-box { background: #f9f9f9; border: 1px dashed #27ae60; padding: 12px; border-radius: 8px; text-align: center; }
+        @media (max-width: 600px) { .adm-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body style="background: #f4f7f6;">
+
+    <nav class="business-nav">
+        <div class="nav-container">
+            <div class="logo-box">
+                <a href="index.html" class="logo-link">
+                    <img src="DDP logo.png" alt="Logo" id="main-logo">
+                    <div class="brand-text">
+                        <span class="navy">Dairy Development</span>
+                        <span class="green">Programme</span>
+                    </div>
+                </a>
+            </div>
+    
+            <div class="menu-toggle" onclick="toggleMenu()" style="cursor: pointer;">
+                <span class="bar" style="display:block; width:25px; height:3px; background:#2c3e50; margin:5px 0;"></span>
+                <span class="bar" style="display:block; width:25px; height:3px; background:#2c3e50; margin:5px 0;"></span>
+                <span class="bar" style="display:block; width:25px; height:3px; background:#2c3e50; margin:5px 0;"></span>
+            </div>
+    
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li class="dropdown">
+                    <a href="#">Services ▾</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="pharmacy.html">Pharmacy</a></li>
+                        <li><a href="academy.html">Academy</a></li>
+                        <li><a href="vet-services.html">Vet Services</a></li>
+                    </ul>
+                </li>
+                <li><a href="admission.html">Admission</a></li>
+                <li><a href="notice.html">Notice</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="franchise.html">Franchise</a></li>
+            </ul>
+    
+            <div class="nav-auth-wrapper">
+                <div id="google_translate_element"></div>
+                <a href="pharmacy.html" class="cart-icon-wrapper">
+                    <span id="cart-badge">0</span> 🛒
+                </a>
+                <a href="admin.html" id="admin-link-nav" style="display:none; font-weight:bold; color:#c0392b; margin-right:15px; text-decoration:none;">⚙️ Admin Panel</a>
+                <span id="user-email" style="display:none; font-weight:bold; color:#27ae60; font-size:14px; margin-right:10px;"></span>
+                <button id="login-btn" onclick="window.showLogin()">Login</button>
+                <button id="logout-btn" onclick="window.handleLogout()" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div style="max-width: 850px; margin: 40px auto; padding: 0 20px;">
+        <div style="background: white; padding: 35px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 6px solid #27ae60;">
+            
+            <center>
+                <img src="DDP logo.png" style="height: 70px; margin-bottom: 10px;">
+                <h2 style="color: #2c3e50; margin: 0;">Academy Admission Portal</h2>
+                <p style="color: #666; font-size: 13px;">Official Enrollment Form (Saharsa, Bihar)</p>
+            </center>
+
+            <form id="detailed-admission-form" style="margin-top: 30px;">
+                
+                <h4 style="color: #27ae60; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 20px;">1. Select Active Course</h4>
+                <div style="margin-bottom: 25px;">
+                    <label class="adm-label">Available Training Batches *</label>
+                    <select id="adm-course" class="adm-input" required style="background: #fff8f0; border: 1px solid #f39c12;">
+                        <option value="">-- Click to choose an active batch --</option>
+                    </select>
+                </div>
+
+                <h4 style="color: #27ae60; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 20px;">2. Student Details</h4>
+                <div class="adm-grid">
+                    <div><label class="adm-label">Full Name *</label><input type="text" id="adm-name" class="adm-input" required></div>
+                    <div><label class="adm-label">Father's/Husband's Name *</label><input type="text" id="adm-father" class="adm-input" required></div>
+                    <div><label class="adm-label">Mother's Name *</label><input type="text" id="adm-mother" class="adm-input" required></div>
+                    <div><label class="adm-label">Aadhar Number *</label><input type="number" id="adm-aadhar" class="adm-input" required></div>
+
+                </div>
+                <div class="adm-grid">
+                    <div>
+                        <label class="adm-label">Date of Birth *</label>
+                        <input type="date" id="adm-dob" class="adm-input" required>
+                    </div>
+                    <div>
+                        <label class="adm-label">Gender *</label>
+                        <select id="adm-gender" class="adm-input" required>
+                            <option value="">-- Select --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="adm-grid">
+                    <div><label class="adm-label">WhatsApp Mobile Number *</label><input type="number" id="adm-phone" class="adm-input" required></div>
+                    <div><label class="adm-label">Village *</label><input type="text" id="adm-address" class="adm-input" required></div>
+                    <div><label class="adm-label">City/District *</label><input type="text" id="adm-city" class="adm-input" required></div>
+                    <div><label class="adm-label">State *</label><input type="text" id="adm-state" class="adm-input" required></div>
+                    <div><label class="adm-label">Pin Code *</label><input type="number" id="adm-pincode" class="adm-input" required></div>
+                </div>
+
+                <h4 style="color: #27ae60; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 20px;">3. Document Uploads (Required)</h4>
+                <div class="adm-grid">
+                    <div class="file-upload-box">
+                        <label class="adm-label">📸 Passport Photo (Max 200KB)</label>
+                        <input type="file" id="up-photo" accept="image/*" class="adm-input" required>
+                        <input type="hidden" id="base-photo">
+                    </div>
+                    <div class="file-upload-box">
+                        <label class="adm-label">🪪 Aadhaar Card Copy</label>
+                        <input type="file" id="up-aadhar" accept="image/*" class="adm-input" required>
+                        <input type="hidden" id="base-aadhar">
+                    </div>
+                </div>
+                <div class="file-upload-box" style="margin-bottom: 20px;">
+                    <label class="adm-label">🎓 Highest Qualification Certificate</label>
+                    <input type="file" id="up-qual" accept="image/*,application/pdf" class="adm-input" required>
+                    <input type="hidden" id="base-qual">
+                </div>
+
+                <h4 style="color: #27ae60; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 20px;">4. Final Declaration</h4>
+                <div style="background: #fdf6ed; padding: 20px; border-radius: 8px; border: 1px solid #f39c12; font-size: 13px; line-height: 1.6;">
+                    <label style="display: flex; gap: 12px; cursor: pointer;">
+                        <input type="checkbox" required style="width: 22px; height: 22px;">
+                        <span>I hereby declare that all information and documents uploaded are true. I agree to the <b>Terms & Conditions</b> of DDP Saharsa and understand that incorrect data will lead to immediate cancellation.</span>
+                    </label>
+                </div>
+
+                <button type="submit" style="width: 100%; padding: 18px; background: #27ae60; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">SUBMIT ADMISSION APPLICATION</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <h3>DDP Saharsa</h3>
+                </div>
+                <p class="footer-address">
+                    📍 <strong>Head Office:</strong><br>
+                    Santnagar, Gangjala, Ward No. 04<br>
+                    Saharsa, Bihar - 852201
+                </p>
+                <div class="footer-map">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3591.56458426!2d86.5925!3d25.88!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ee161555555555%3A0x123456789!2sSaharsa%2C%20Bihar!5e0!3m2!1sen!2sin!4v1700000000000" width="100%" height="100" style="border:0; border-radius:8px;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="pharmacy.html">Pharmacy</a></li>
+                    <li><a href="academy.html">Academy</a></li>
+                    <li><a href="admission.html">Admission</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="franchise.html">Franchise</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Support & Legal</h4>
+                <ul>
+                    <li><a href="grievance.html">Grievance Redressal</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="terms.html">Terms of Use</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="disclaimer.html">Disclaimer</a></li>
+                    <li><a href="help.html">Help & Support</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <p>✉️ dairydevelopmentprogramshc@gmail.com</p>
+                <p>📞 +91 7782859925</p>
+                <p>🌐 www.ddpsaharsa.com</p>
+                
+                <div class="social-icons">
+                    <a href="#" class="social-icon">Facebook</a>
+                    <a href="#" class="social-icon">YouTube</a>
+                    <a href="#" class="social-icon">Twitter</a>
+                </div>
+                
+                <div class="creator-credit">
+                    <p>Designed & Created by: <strong>DDP Tech Team</strong></p>
+                </div>
+            </div>
+        </div>
+    
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2026 Dairy Development Programme. All Rights Reserved.</p>
+                <div class="footer-stats">
+                    <span>Last Updated: <strong id="last-updated">23 Feb 2026</strong></span>
+                    <span class="visitor-count">Visitors: <strong id="visitor-count">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+    <script>
+        // File Conversion Helper
+        const setupFile = (inputId, hiddenId) => {
+            document.getElementById(inputId).addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file.size > 250000) { 
+                    Swal.fire('File Too Large', 'Please upload a file smaller than 200KB', 'warning'); 
+                    e.target.value = ""; return; 
+                }
+                const reader = new FileReader();
+                reader.onloadend = () => { document.getElementById(hiddenId).value = reader.result; };
+                reader.readAsDataURL(file);
+            });
+        };
+        setupFile('up-photo', 'base-photo');
+        setupFile('up-aadhar', 'base-aadhar');
+        setupFile('up-qual', 'base-qual');
+    </script>
+</body>
+</html>

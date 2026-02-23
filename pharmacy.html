@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Shop | DDP Saharsa</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+    <nav class="business-nav">
+        <div class="nav-container">
+            <div class="logo-box">
+                <a href="index.html" class="logo-link">
+                    <img src="DDP logo.png" alt="Logo" id="main-logo">
+                    <div class="brand-text">
+                        <span class="navy">Dairy Development</span>
+                        <span class="green">Programme</span>
+                    </div>
+                </a>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li class="dropdown">
+                    <a href="#" style="color: #27ae60;">Services ▾</a> 
+                    <ul class="dropdown-menu">
+                        <li><a href="pharmacy.html">Pharmacy</a></li>
+                        <li><a href="academy.html">Academy</a></li>
+                        <li><a href="vet-services.html">Vet Services</a></li>
+                    </ul>
+                </li>
+                <li><a href="admission.html">Admission</a></li>
+                <li><a href="notice.html">Notice</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="franchise.html">Franchise</a></li>
+            </ul>
+
+            <div class="nav-auth">
+                <a href="dashboard.html" id="user-email" style="display:none; font-weight:bold; color:#27ae60; margin-right:10px; text-decoration:none;">My Portal</a>
+                <button id="login-btn" onclick="window.showLogin()">Login</button>
+                <button id="logout-btn" onclick="window.handleLogout()" style="display:none;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="side-enquiry" onclick="window.showEnquiry()">
+        <span>📩 Enquire Now</span>
+    </div>
+
+    <section class="page-header" style="background: #27ae60; color: white; padding: 60px 20px; text-align: center;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 10px;">DDP Pharmacy Shop</h1>
+        <p style="font-size: 1.1rem; opacity: 0.9;">Authentic medicines and supplements for livestock and pets in Saharsa.</p>
+    </section>
+
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 40px 20px;">
+        <div class="search-box" style="margin-bottom: 40px;">
+            <input type="text" id="product-search" placeholder="Search for Calcium, Vitamins, etc..." 
+                   style="width: 100%; padding: 15px 25px; border-radius: 50px; border: 2px solid #27ae60; font-size: 1rem; outline: none;">
+        </div>
+
+        <div id="live-product-grid" class="product-grid">
+            <p style="text-align: center; color: #666;">Loading inventory...</p>
+        </div>
+    </div>
+
+    <div id="cart-display" class="cart-box" style="position: fixed; bottom: 20px; right: 20px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); width: 300px; z-index: 1000;">
+        <h3 style="margin-top: 0; display:flex; justify-content:space-between;">
+            Shopping Cart <span id="cart-badge" style="background:#27ae60; color:white; padding:2px 8px; border-radius:50px; font-size:12px;">0</span>
+        </h3>
+        <hr>
+        <div id="cart-items" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+            <p style="color: grey; text-align:center;">Your cart is empty.</p>
+        </div> 
+        <button id="checkout-btn" onclick="window.checkoutCart()" style="background: #27ae60; width: 100%; padding: 12px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer;">Place Order</button>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo">
+                    <h3>DDP Saharsa</h3>
+                </div>
+                <p class="footer-address">
+                    📍 <strong>Head Office:</strong><br>
+                    Santnagar, Gangjala, Ward No. 04<br>
+                    Saharsa, Bihar - 852201
+                </p>
+                <div class="footer-map">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3591.56458426!2d86.5925!3d25.88!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ee161555555555%3A0x123456789!2sSaharsa%2C%20Bihar!5e0!3m2!1sen!2sin!4v1700000000000" width="100%" height="100" style="border:0; border-radius:8px;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="pharmacy.html">Pharmacy</a></li>
+                    <li><a href="academy.html">Academy</a></li>
+                    <li><a href="admission.html">Admission</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="franchise.html">Franchise</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Support & Legal</h4>
+                <ul>
+                    <li><a href="grievance.html">Grievance Redressal</a></li>
+                    <li><a href="faq.html">FAQs</a></li>
+                    <li><a href="terms.html">Terms of Use</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="disclaimer.html">Disclaimer</a></li>
+                    <li><a href="help.html">Help & Support</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+    
+            <div class="footer-col">
+                <h4>Contact Info</h4>
+                <p>✉️ dairydevelopmentprogramshc@gmail.com</p>
+                <p>📞 +91 7782859925</p>
+                <p>🌐 www.ddpsaharsa.com</p>
+                
+                <div class="social-icons">
+                    <a href="#" class="social-icon">Facebook</a>
+                    <a href="#" class="social-icon">YouTube</a>
+                    <a href="#" class="social-icon">Twitter</a>
+                </div>
+                
+                <div class="creator-credit">
+                    <p>Designed & Created by: <strong>DDP Tech Team</strong></p>
+                </div>
+            </div>
+        </div>
+    
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2026 Dairy Development Programme. All Rights Reserved.</p>
+                <div class="footer-stats">
+                    <span>Last Updated: <strong id="last-updated">23 Feb 2026</strong></span>
+                    <span class="visitor-count">Visitors: <strong id="visitor-count">0</strong></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="universal-map-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:99999; justify-content:center; align-items:center;">
+        <div style="background:white; padding:20px; border-radius:12px; width:90%; max-width:500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0; color:#2c3e50;">📍 Select Delivery Location</h3>
+                <button onclick="window.closeMapPicker()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div id="universal-map" style="height: 350px; width:100%; border-radius: 8px; border: 1px solid #ddd; margin-bottom:15px;"></div>
+            <p style="font-size:12px; color:#666; margin-bottom:15px;">Drag the marker to your farm/house for accurate delivery.</p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="window.confirmMapLocation()" style="flex:2; background:#27ae60; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">✅ Confirm Location</button>
+                <button onclick="window.closeMapPicker()" style="flex:1; background:#eee; color:#333; border:none; padding:12px; border-radius:8px; cursor:pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
