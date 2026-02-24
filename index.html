@@ -7,11 +7,12 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
     <nav class="business-nav">
-        <div class="nav-container">
+        <div class="nav-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 1200px; margin: 0 auto;">
             <div class="logo-box">
                 <a href="index.html" class="logo-link">
                     <img src="DDP logo.png" alt="Logo" id="main-logo">
@@ -44,7 +45,7 @@
             </ul>
     
             <div class="nav-auth-wrapper">
-                <div id="google_translate_element"></div>
+                <div id="google_translate_element" style="margin-right: 15px;"></div>
                 <a href="pharmacy.html" class="cart-icon-wrapper">
                     <span id="cart-badge">0</span> 🛒
                 </a>
@@ -56,7 +57,7 @@
         </div>
     </nav>
 
-    <div class="side-enquiry" onclick="window.showEnquiry()" style="z-index: 9999;">
+    <div class="side-enquiry shimmer-sidebar" onclick="window.showEnquiry()">
         <span>📩 Enquire Now</span>
     </div>
     
@@ -64,7 +65,7 @@
         <div class="hero-content">
             <h1>Expert Care for Your Farm & Pets</h1>
             <p>Professional veterinary services, quality pharmacy, and modern dairy farming courses.</p>
-            <a href="#vet-service" class="cta-button">Book a Vet Now</a>
+            <a href="#vet-support-center" class="cta-button pulse-animation">Book a Vet Now</a>
         </div>
     </header>
 
@@ -85,17 +86,22 @@
                      alt="Modern Dairy Farm" 
                      style="width: 100%; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1);">
                 <div style="position: absolute; top: -20px; left: -20px; background: #27ae60; color: white; padding: 15px; border-radius: 15px; font-weight: bold; font-size: 14px; box-shadow: 0 10px 20px rgba(39,174,96,0.3);">
-                    Saharsa's First <br> Tech-Driven Dairy
+                    Saharsa's First <br> Tech-Driven Dairy Organisation
                 </div>
             </div>
     
             <div style="flex: 1.2; min-width: 320px;">
                 <h4 style="color: #27ae60; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 13px;">About DDP Saharsa</h4>
-                <h2 style="color: #2c3e50; font-size: 32px; margin-bottom: 20px; line-height: 1.2;">Empowering Farmers with <span style="color: #27ae60;">Smart Technology</span></h2>
                 
-                <p style="color: #555; line-height: 1.7; margin-bottom: 25px; font-size: 15px;">
-                    DDP Saharsa is more than just a dairy program. We are integrating **Renewable Energy** and **GSM-based Automation** to solve real-world agricultural problems in Bihar. From expert veterinary house-calls to a 24/7 digital pharmacy, we bring modern science to your farm gates.
+                <h2 id="home-about-heading" style="color: #2c3e50; font-size: 32px; margin-bottom: 20px; line-height: 1.2;">
+                    Empowering Farmers with <span style="color: #27ae60;">Smart Technology</span>
+                </h2>
+    
+                <p id="home-about-text" style="color: #555; line-height: 1.7; margin-bottom: 25px; font-size: 15px;">
+                    Loading description...
                 </p>
+    
+                <img id="home-about-image" src="" style="width: 100%; border-radius: 12px; margin-bottom: 20px; display: none;">
     
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px;">
                     <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; border-left: 4px solid #27ae60;">
