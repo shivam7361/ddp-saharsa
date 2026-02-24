@@ -52,6 +52,24 @@ onAuthStateChanged(auth, (user) => {
     const userPhone = user ? user.email.split('@')[0] : null;
     if (!user || userPhone !== ADMIN_PHONE) { window.location.href = "index.html"; }
 });
+// Initialize Quill Editor
+let quill;
+document.addEventListener("DOMContentLoaded", () => {
+    quill = new Quill('#admin-about-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'align': [] }],
+                ['image', 'link'],
+                ['clean']
+            ]
+        }
+    });
+});
 
 // ==========================================
 // --- 2. ANALYTICS (FIXED REVENUE) ---
@@ -405,6 +423,9 @@ window.deleteItem = async (col, id) => {
 
 // --- APPROVE ADMISSION (With Due Date & Discount) ---
 window.adminApproveAdmission = async (id, phone, total) => {
+    // Standardize phone to 10 digits to match dashboard query logic
+    const cleanPhone = String(phone).replace(/\D/g, "").slice(-10);
+
     const { value: formValues } = await Swal.fire({
         title: 'Approve Admission',
         html:
@@ -427,25 +448,25 @@ window.adminApproveAdmission = async (id, phone, total) => {
         
         await updateDoc(doc(db, "enrollments", id), {
             status: "active",
+            userPhone: cleanPhone, // Ensure the stored phone matches the dashboard's cleanPhone format
             feePaid: Number(paid),
-            totalFee: finalTotal, // Updated price after discount
+            totalFee: finalTotal,
             concession: Number(disc),
             nextDueDate: dueDate,
-            unlockUntil: "", // Grace period empty by default
+            unlockUntil: "", 
             approvedAt: serverTimestamp()
         });
 
-        window.sendAdminAlert(`🎓 <b>ADMISSION APPROVED</b>\nStudent: ${phone}\nPaid: ₹${paid}\nDiscount: ₹${disc}\nNext Due: ${dueDate}`);
+        let teleMsg = `✅ <b>ADMISSION APPROVED</b>\n\n` +
+        `📞 <b>Student Phone:</b> ${cleanPhone}\n` +
+        `💰 <b>Final Fee:</b> ₹${finalTotal}\n` +
+        `💵 <b>Initial Paid:</b> ₹${paid}\n` +
+        `🎁 <b>Discount:</b> ₹${disc}\n` +
+        `📅 <b>Next Due:</b> ${dueDate}`;
+        
+        window.sendAdminAlert(teleMsg);
         Swal.fire('Approved', 'Student is now active with updated ledger.', 'success');
     }
-    // Inside adminApproveAdmission
-let teleMsg = `✅ <b>ADMISSION APPROVED</b>\n\n` +
-`📞 <b>Student Phone:</b> ${phone}\n` +
-`💰 <b>Final Fee:</b> ₹${finalTotal}\n` +
-`💵 <b>Initial Paid:</b> ₹${paid}\n` +
-`🎁 <b>Discount:</b> ₹${disc}\n` +
-`📅 <b>Next Due:</b> ${dueDate}`;
-window.sendAdminAlert(teleMsg);
 };
 function loadOrderHistory() {
     const table = document.getElementById('orders-table');
@@ -456,16 +477,27 @@ function loadOrderHistory() {
             const o = d.data();
             const id = d.id;
             const itemsSummary = o.items.map(i => `${i.name} (x${i.qty})`).join(', ');
+            
+            // Status Styling
             let statusStyle = "background: #eee; color: #666;"; 
             if(o.status === "Processing") statusStyle = "background: #d1ecf1; color: #0c5460; font-weight: bold;";
             if(o.status === "Out for Delivery") statusStyle = "background: #fff3cd; color: #856404; font-weight: bold;";
             if(o.status === "Delivered") statusStyle = "background: #d4edda; color: #155724; font-weight: bold;";
 
+            // GPS Link Handling
+            const gpsLink = o.gpsLocation ? `<a href="${o.gpsLocation}" target="_blank" style="color:#2980b9; font-weight:bold;">📍 View Map</a>` : '<span style="color:#999;">Not Set</span>';
+
             table.innerHTML += `
                 <tr>
                     <td>${o.timestamp?.toDate().toLocaleDateString() || 'N/A'}</td>
-                    <td><b>${itemsSummary}</b><br><small>Total: ₹${o.totalAmount}</small></td>
-                    <td>${o.customerName}<br>${o.phone}</td>
+                    <td>
+                        <small><b>${itemsSummary}</b></small><br>
+                        <button onclick="window.printOrderReceipt('${id}')" style="margin-top:5px; padding:2px 8px; font-size:10px; cursor:pointer; background:#2c3e50; color:white; border:none; border-radius:3px;">📄 Print Receipt</button>
+                    </td>
+                    <td>${o.customerName}</td>
+                    <td>${o.phone}</td>
+                    <td style="font-size:11px; max-width:150px;">${o.address}</td>
+                    <td>${gpsLink}</td>
                     <td><span style="padding:4px 8px; border-radius:4px; font-size:10px; ${statusStyle}">${o.status.toUpperCase()}</span></td>
                     <td>
                         <div style="display:flex; gap:5px;">
@@ -480,6 +512,84 @@ function loadOrderHistory() {
     });
 }
 
+// --- NEW PRINT RECEIPT FUNCTION ---
+window.printOrderReceipt = async (orderId) => {
+    const snap = await getDoc(doc(db, "orders", orderId));
+    if(!snap.exists()) return;
+    const o = snap.data();
+    
+    const win = window.open('', '', 'width=800,height=800');
+    
+    let itemsHtml = o.items.map(i => {
+        const itemTotal = i.price * i.qty;
+        return `
+            <tr>
+                <td style="padding:10px; border-bottom:1px solid #eee;">${i.name}</td>
+                <td style="padding:10px; border-bottom:1px solid #eee;">₹${i.price}</td>
+                <td style="padding:10px; border-bottom:1px solid #eee; text-align:center;">${i.qty}</td>
+                <td style="padding:10px; border-bottom:1px solid #eee; text-align:right;">₹${itemTotal}</td>
+            </tr>`;
+    }).join('');
+
+    win.document.write(`
+        <html>
+        <head><title>Invoice - ${o.customerName}</title></head>
+        <body style="font-family:sans-serif; padding:40px; color:#333;">
+            <div style="text-align:center; margin-bottom:30px;">
+                <img src="DDP logo.png" style="height:60px;">
+                <h2 style="margin:5px 0;">Dairy Development Programme</h2>
+                <p style="margin:0; font-size:12px;">Saharsa, Bihar | Pharmacy Division</p>
+                <h3 style="margin-top:20px; border-bottom:2px solid #27ae60; display:inline-block; padding-bottom:5px;">TAX INVOICE / CASH MEMO</h3>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-bottom:30px; font-size:14px;">
+                <div>
+                    <b>BILLED TO:</b><br>
+                    ${o.customerName.toUpperCase()}<br>
+                    Phone: ${o.phone}<br>
+                    Address: ${o.address}
+                </div>
+                <div style="text-align:right;">
+                    <b>Order ID:</b> ${orderId.slice(-8).toUpperCase()}<br>
+                    <b>Date:</b> ${o.timestamp?.toDate().toLocaleDateString()}<br>
+                    <b>Status:</b> ${o.status}
+                </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                <thead>
+                    <tr style="background:#f4f4f4; text-align:left;">
+                        <th style="padding:10px;">Medicine Name</th>
+                        <th style="padding:10px;">Price</th>
+                        <th style="padding:10px; text-align:center;">Qty</th>
+                        <th style="padding:10px; text-align:right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+
+            <div style="float:right; width:250px; font-size:14px;">
+                <div style="display:flex; justify-content:space-between; padding:5px 0;">
+                    <span>Subtotal:</span> <span>₹${o.totalAmount}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #ddd;">
+                    <span>Delivery:</span> <span>FREE</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:10px 0; font-weight:bold; font-size:18px; color:#27ae60;">
+                    <span>GRAND TOTAL:</span> <span>₹${o.totalAmount}</span>
+                </div>
+            </div>
+
+            <div style="margin-top:150px; font-size:11px; color:#999; text-align:center; border-top:1px solid #eee; padding-top:20px;">
+                This is a computer-generated invoice. No signature is required.
+                <br><button class="no-print" onclick="window.print()" style="margin-top:20px; padding:10px 30px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">Print Now</button>
+            </div>
+            <style>@media print { .no-print { display:none; } }</style>
+        </body></html>
+    `);
+    win.document.close();
+};
+
 window.updateOrderStatus = async (id, newStatus) => {
     try {
         await updateDoc(doc(db, "orders", id), { status: newStatus });
@@ -487,6 +597,10 @@ window.updateOrderStatus = async (id, newStatus) => {
         const o = orderSnap.data();
         const itemsList = o.items.map(i => `• ${i.name} (x${i.qty}) - ₹${i.price * i.qty}`).join('\n');
 
+        // 🔥 Trigger Low Stock Check when processing or delivering
+        if (newStatus === "Processing" || newStatus === "Delivered") {
+            window.checkLowStockAlert(o.items);
+        }
         let teleMsg = `🚀 <b>ORDER STATUS UPDATED: ${newStatus.toUpperCase()}</b>\n\n`;
         teleMsg += `👤 <b>Customer:</b> ${o.customerName}\n`;
         teleMsg += `📞 <b>Phone:</b> ${o.phone}\n`;
@@ -785,13 +899,21 @@ window.postNotice = async () => {
 // 3. Update About Section
 window.updateAboutSection = async () => {
     const heading = document.getElementById('admin-about-heading').value.trim();
-    const text = document.getElementById('admin-about-text').value.trim();
+    const richTextHtml = quill.root.innerHTML; // Capture the formatted HTML
     const image = document.getElementById('admin-about-image').value.trim();
 
     try {
-        await setDoc(doc(db, "settings", "about"), { heading, text, image, updatedAt: serverTimestamp() });
-        Swal.fire('Saved', 'Homepage About section updated.', 'success');
-    } catch (e) { Swal.fire('Error', 'Failed to save settings.', 'error'); }
+        Swal.fire({ title: 'Saving Premium Layout...', didOpen: () => Swal.showLoading() });
+        await setDoc(doc(db, "settings", "about"), { 
+            heading, 
+            text: richTextHtml, // Saving HTML here
+            image, 
+            updatedAt: serverTimestamp() 
+        });
+        Swal.fire('Saved', 'Premium About section is now live.', 'success');
+    } catch (e) { 
+        Swal.fire('Error', 'Failed to save premium settings.', 'error'); 
+    }
 };
 
 // 4. Gallery Uploader
@@ -1139,26 +1261,145 @@ window.printFeeStatement = async (enrollId) => {
     win.document.close();
 };
 
+// Add this to admin.js
+function loadNoticeManager() {
+    const list = document.getElementById('admin-notice-list');
+    if (!list) return;
+
+    onSnapshot(query(collection(db, "notices"), orderBy("timestamp", "desc")), (snap) => {
+        list.innerHTML = "";
+        snap.forEach(docSnap => {
+            const n = docSnap.data();
+            list.innerHTML += `
+                <tr>
+                    <td><b>${n.title}</b></td>
+                    <td>
+                        <button onclick="window.deleteItem('notices', '${docSnap.id}')" 
+                                style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
+// --- Low Stock Monitor for Pharmacy ---
+window.checkLowStockAlert = async (items) => {
+    for (const item of items) {
+        // Fetch the specific product from the database
+        const productRef = doc(db, "products", item.id);
+        const productSnap = await getDoc(productRef);
+        
+        if (productSnap.exists()) {
+            const p = productSnap.data();
+            const threshold = 5; // Alert limit
+
+            if (Number(p.currentStock) <= threshold) {
+                let alertMsg = `⚠️ <b>LOW STOCK ALERT</b>\n\n` +
+                               `💊 <b>Medicine:</b> ${p.name}\n` +
+                               `📉 <b>Remaining:</b> ${p.currentStock} units\n` +
+                               `👉 <i>Shivam, please restock soon.</i>`;
+                
+                window.sendAdminAlert(alertMsg); // Triggers your Telegram Bot
+            }
+        }
+    }
+};
+// ==========================================
+// --- 🎓 PREMIUM LECTURE MANAGER LOGIC ---
+// ==========================================
+
+// 1. Upload a Lecture to a specific Course
+window.uploadLecture = async () => {
+    const cId = document.getElementById('admin_course_id').value.trim();
+    const vId = document.getElementById('admin_video_id').value.trim();
+    const title = document.getElementById('admin_lec_title').value.trim();
+    const order = document.getElementById('admin_lec_order').value;
+
+    if (!cId || !vId || !title || !order) {
+        return Swal.fire('Error', 'Please fill all lecture details!', 'warning');
+    }
+
+    try {
+        Swal.fire({ title: 'Publishing Lecture...', didOpen: () => Swal.showLoading() });
+        
+        await addDoc(collection(db, "lectures"), {
+            courseId: cId,
+            videoId: vId,
+            title: title,
+            order: Number(order),
+            timestamp: serverTimestamp()
+        });
+
+        window.sendAdminAlert(`📚 <b>NEW LECTURE PUBLISHED</b>\nCourse: ${cId}\nTitle: ${title}`);
+        Swal.fire('Success', 'Lecture added to the library.', 'success');
+
+        // Clear inputs
+        ['admin_video_id', 'admin_lec_title', 'admin_lec_order'].forEach(id => document.getElementById(id).value = "");
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Failed to publish lecture.', 'error');
+    }
+};
+
+// 2. Load the Library for modification
+function loadLectureLibrary() {
+    const list = document.getElementById('admin-lecture-list');
+    if (!list) return;
+
+    onSnapshot(query(collection(db, "lectures"), orderBy("courseId"), orderBy("order", "asc")), (snap) => {
+        list.innerHTML = "";
+        if (snap.empty) {
+            list.innerHTML = "<tr><td colspan='4' style='text-align:center; color:#999;'>No lectures uploaded yet.</td></tr>";
+            return;
+        }
+
+        snap.forEach(docSnap => {
+            const l = docSnap.data();
+            list.innerHTML += `
+                <tr>
+                    <td><b style="color:#2980b9;">${l.courseId}</b></td>
+                    <td><span style="background:#eee; padding:2px 8px; border-radius:4px;">#${l.order}</span></td>
+                    <td>
+                        <b>${l.title}</b><br>
+                        <small style="color:#666;">YouTube ID: ${l.videoId}</small>
+                    </td>
+                    <td>
+                        <button onclick="window.deleteItem('lectures', '${docSnap.id}')" 
+                                style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size:16px;">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
 
 // --- Missing functions like Record Payment, Print Marksheet etc should follow here ---
 
 window.onload = async () => {
     calculateAnalytics();
     loadStudentManager();
-    loadOrderHistory();
     loadVetBookings();
+    loadOrderHistory();
     loadBusinessEnquiries();
     loadGrievanceManager();
     displayAdminGallery();
+    loadNoticeManager();
+    loadLectureLibrary();
     displayAdminCourses(); // <--- ADD THIS LINE HERE
     displayAdminStock(); // Start listening to stock
 
-    // Pre-load current About section content into inputs
-    const aboutDoc = await getDoc(doc(db, "settings", "about"));
-    if (aboutDoc.exists()) {
-        const d = aboutDoc.data();
-        document.getElementById('admin-about-heading').value = d.heading || "";
-        document.getElementById('admin-about-text').value = d.text || "";
-        document.getElementById('admin-about-image').value = d.image || "";
+   // Inside window.onload, update the fetch logic:
+const aboutDoc = await getDoc(doc(db, "settings", "about"));
+if (aboutDoc.exists()) {
+    const d = aboutDoc.data();
+    document.getElementById('admin-about-heading').value = d.heading || "";
+    document.getElementById('admin-about-image').value = d.image || "";
+
+    // Load the saved HTML into the Quill editor
+    if (quill && d.text) {
+        quill.root.innerHTML = d.text;
     }
+}
 };
