@@ -21,6 +21,13 @@ const auth = getAuth(app);
 const ADMIN_PHONE = "7782859925";
 window.selectedGpsLocation = null;
 
+// Export Firebase tools globally for use in dashboard.html
+window.firebaseDB = db;
+window.firebaseCollection = collection;
+window.firebaseQuery = query;
+window.firebaseWhere = where;
+window.getFirebaseDocs = getDocs;
+
 // ==========================================
 // --- 🛰️ TELEGRAM ALERTS ---
 // ==========================================
@@ -110,11 +117,22 @@ async function loadAllContent() {
         onSnapshot(collection(db, "products"), (snap) => {
             pGrid.innerHTML = snap.docs.map(d => {
                 const p = d.data();
+                const productId = d.id;
                 return `<div class="product-card" style="background:white; border:1px solid #eee; border-radius:12px; overflow:hidden; padding:10px; text-align:center;">
                     <img src="${p.image}" style="width:100%; height:150px; object-fit:cover; border-radius:8px;">
                     <h4 style="margin:10px 0 5px;">${p.name}</h4>
                     <p style="color:#27ae60; font-weight:bold;">₹${p.discountPrice} <del style="color:#999; font-size:11px;">₹${p.price}</del></p>
-                    <button onclick="window.addToCart('${d.id}', '${p.name.replace(/'/g, "\\'")}', ${p.discountPrice})" style="width:100%; background:#27ae60; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer;">+ Add to Cart</button>
+                    
+                    <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 12px; color: #666;">Qty:</span>
+                        <input type="number" id="qty-${productId}" value="1" min="1" max="${p.currentStock || 10}" 
+                               style="width: 50px; padding: 5px; border-radius: 4px; border: 1px solid #ddd; text-align: center;">
+                    </div>
+            
+                    <button onclick="window.handleAddToCart('${productId}', '${p.name.replace(/'/g, "\\'")}', ${p.discountPrice})" 
+                            style="width:100%; background:#27ae60; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-weight:bold;">
+                        + Add to Cart
+                    </button>
                 </div>`;
             }).join('');
         });
@@ -187,127 +205,182 @@ window.viewCourseDetails = async (id) => {
 // --- 3. FARMER DASHBOARD LOADER ---
 // ==========================================
 window.loadUserDashboardData = async (phone) => {
+    // 1. Standardize the login phone number
     const cleanPhone = String(phone).replace(/\D/g, "").slice(-10);
+    const certContainer = document.getElementById('list-certificates'); 
+    let certHtml = ""; // Initialize this to store certificates globally for this session
     
-    // 1. Auto-fill Profile
-    const uDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-    if (uDoc.exists()) {
-        const u = uDoc.data();
-        if(document.getElementById('dash-user-name')) document.getElementById('dash-user-name').innerText = u.name || "Farmer";
-        if(document.getElementById('prof-phone')) document.getElementById('prof-phone').value = cleanPhone;
-        ['salutation','name','email','dob','qualification','occupation','state','district','address'].forEach(f => {
-            if(u[f] && document.getElementById(`prof-${f}`)) document.getElementById(`prof-${f}`).value = u[f];
-        });
-        if(u.photoBase64 && document.getElementById('prof-pic-preview')) {
-            document.getElementById('prof-pic-preview').src = u.photoBase64;
-            document.getElementById('prof-pic-base64').value = u.photoBase64;
+    // 2. Auto-fill Profile Information
+    try {
+        const uDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        if (uDoc.exists()) {
+            const u = uDoc.data();
+            if(document.getElementById('dash-user-name')) document.getElementById('dash-user-name').innerText = u.name || "Farmer";
+            if(document.getElementById('prof-phone')) document.getElementById('prof-phone').value = cleanPhone;
+            
+            ['salutation','name','email','dob','qualification','occupation','state','district','address'].forEach(f => {
+                const el = document.getElementById(`prof-${f}`);
+                if(u[f] && el) el.value = u[f];
+            });
+            
+            if(u.photoBase64 && document.getElementById('prof-pic-preview')) {
+                document.getElementById('prof-pic-preview').src = u.photoBase64;
+                document.getElementById('prof-pic-base64').value = u.photoBase64;
+            }
         }
+    } catch (err) {
+        console.error("Profile load error:", err);
     }
 
-    // 2. Load Lists with Service Tracker for Vet Requests
+    // 3. Define Collections to load
     const confs = [ 
         { id: 'list-orders', col: 'orders' }, 
         { id: 'list-courses', col: 'enrollments' }, 
         { id: 'list-vet', col: 'service_requests' }, 
-        { id: 'list-grievances', col: 'grievances' } 
+        { id: 'list-grievances', col: 'grievances' },
+        { id: 'list-cattle', col: 'livestock' } 
     ];
 
     confs.forEach(c => {
         const cont = document.getElementById(c.id); 
         if (!cont) return;
-
-        onSnapshot(collection(db, c.col), (snap) => {
+    
+        const phoneField = (c.col === 'enrollments') ? 'userPhone' : 'phone';
+        const q = query(collection(db, c.col), where(phoneField, "==", cleanPhone));
+    
+        onSnapshot(q, (snap) => {
             let html = "";
+            // Reset certHtml for this specific snapshot turn if it's the enrollment collection
+            if (c.col === 'enrollments') certHtml = ""; 
+
+            if (snap.empty) {
+                cont.innerHTML = `<p style='font-size:12px; color:#999;'>No history found.</p>`;
+                // Update cert container to empty if no enrollments exist
+                if (c.col === 'enrollments' && certContainer) certContainer.innerHTML = "<p style='font-size:12px; color:#999;'>No certificates issued yet.</p>";
+                return;
+            }
+    
             snap.forEach(dDoc => {
                 const d = dDoc.data();
-                const dbP = String(d.userPhone || d.phone || "").replace(/\D/g, "").slice(-10);
+                const id = dDoc.id; // Corrected: define 'id' for use in buttons
+                
+                // --- ENROLLMENTS / ACADEMY LOGIC ---
+                if (c.col === 'enrollments') {
+                    const access = window.checkAccess ? window.checkAccess(d) : { locked: false };
+                    const isPend = (d.status || "").toLowerCase() === "pending";
+                    html += `
+                    <div style="padding:15px; border:1px solid ${access.locked ? '#e74c3c' : '#ddd'}; margin-bottom:10px; border-radius:8px; background:${access.locked ? '#fff5f5' : '#fff'};">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>${d.courseName}</b>
+                            <span style="font-size:10px; background:${access.locked ? '#e74c3c' : (isPend ? '#f39c12' : '#27ae60')}; color:white; padding:3px 8px; border-radius:4px;">
+                                ${access.locked ? '🛑 LOCKED' : (d.status || "ACTIVE").toUpperCase()}
+                            </span>
+                        </div>
+                        ${!isPend ? `<button onclick="window.viewBatchDetails('${id}')" style="margin-top:10px; background:#2980b9; color:white; border:none; padding:6px 12px; border-radius:4px; font-size:11px; cursor:pointer;">📖 View Batch & Lectures</button>` : ''}
+                    </div>`;
 
-                if (dbP === cleanPhone) {
-                    // --- ENROLLMENTS LOGIC ---
-                    if (c.col === 'enrollments') {
-                        const access = window.checkAccess(d);
-                        const isPend = d.status === "pending" || d.status === "Pending";
-                        html += `
-                        <div style="padding:15px; border:1px solid ${access.locked ? '#e74c3c' : '#ddd'}; margin-bottom:10px; border-radius:8px; background:${access.locked ? '#fff5f5' : '#fff'};">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <b>${d.courseName}</b>
-                                <span style="font-size:10px; background:${access.locked ? '#e74c3c' : (isPend ? '#f39c12' : '#27ae60')}; color:white; padding:3px 8px; border-radius:4px;">
-                                    ${access.locked ? '🛑 LOCKED' : d.status.toUpperCase()}
-                                </span>
+                    // Handle Certificates for the separate "My Certificates" section
+                    if (d.courseStatus === "Completed") {
+                        certHtml += `
+                        <div style="background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom:15px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                                <div style="background: #f3e5f5; color: #9b59b6; padding: 10px; border-radius: 8px; font-size: 20px;">🎓</div>
+                                <div>
+                                    <h4 style="margin: 0; color: #2c3e50;">${d.courseName}</h4>
+                                    <small style="color: #666;">ID: ${id.slice(-8).toUpperCase()}</small>
+                                </div>
                             </div>
-                            ${!isPend ? `<button onclick="window.viewBatchDetails('${dDoc.id}')" style="margin-top:10px; background:#2980b9; color:white; border:none; padding:6px 12px; border-radius:4px; font-size:11px; cursor:pointer;">📖 View Batch & Lectures</button>` : ''}
-                        </div>`;
-                    } 
-                    // --- VET SERVICE TRACKER LOGIC ---
-                    else if (c.id === 'list-vet') {
-                        const status = d.status || "Pending";
-                        let step = 1;
-                        let color = "#f39c12"; // Default Orange
-
-                        if(status === "Assigned") { step = 2; color = "#3498db"; }
-                        if(status === "Vet Dispatched") { step = 3; color = "#9b59b6"; }
-                        if(status === "Arrived / Treatment") { step = 4; color = "#e67e22"; }
-                        if(status === "Completed") { step = 5; color = "#27ae60"; }
-
-                        html += `
-                        <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 10px rgba(0,0,0,0.03);">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                <span style="font-weight:bold; color:#2c3e50; font-size:14px;">🚑 ${d.animalType} Support</span>
-                                <span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${color}; color:white; font-weight:bold;">${status.toUpperCase()}</span>
-                            </div>
-                            
-                            <div style="height:6px; background:#f0f0f0; border-radius:10px; overflow:hidden; display:flex; margin:15px 0 5px 0;">
-                                <div style="width:${(step/5)*100}%; background:${color}; height:100%; transition:0.5s;"></div>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; font-size:9px; color:#999; text-transform:uppercase;">
-                                <span>Request</span><span>Assigned</span><span>On Way</span><span>Clinic</span><span>Finish</span>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="window.printCertificate('${id}')" 
+                                        style="flex: 1; background: #9b59b6; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                                    📜 Certificate
+                                </button>
+                                <button onclick="window.printMarksheet('${id}')" 
+                                        style="flex: 1; background: #34495e; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px;">
+                                    📊 Marksheet
+                                </button>
                             </div>
                         </div>`;
-                    }
-                    else if (c.id === 'list-grievances') {
-                        const status = d.status || "Pending";
-                        html += `
-                        <div style="padding:15px; border-bottom:1px solid #eee; background: #fff; margin-bottom:10px; border-radius:8px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <b>${d.category}</b>
-                                <span style="font-size:10px; background:${status === 'Resolved' ? '#27ae60' : '#e67e22'}; color:white; padding:2px 8px; border-radius:10px;">${status}</span>
-                            </div>
-                            <p style="font-size:12px; color:#666; margin:8px 0;">${d.message.substring(0, 50)}...</p>
-                            <button onclick="window.printGrievance('${dDoc.id}')" style="background:#f1f2f6; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer;">🖨️ View & Print</button>
-                        </div>`;
-                    }
-                    // --- Inside loadUserDashboardData in app.js ---
-else if (c.id === 'list-orders') {
-    const status = d.status || "Order Placed";
-    let color = "#3498db"; // Default Blue
-    if(status === "Dispatched") color = "#9b59b6";
-    if(status === "Delivered") color = "#27ae60";
-    if(status === "Cancelled") color = "#e74c3c";
-
-    html += `
-    <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <span style="font-weight:bold; color:#2c3e50;">📦 Order Placed</span>
-            <span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${color}; color:white; font-weight:bold;">${status.toUpperCase()}</span>
-        </div>
-        
-        <div style="font-size:13px; color:#666; margin-bottom:10px;">
-            ${d.items.map(i => `• ${i.name}`).join('<br>')}
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f8f9fa; pt-10; margin-top:10px; padding-top:10px;">
-            <span style="font-weight:bold; color:#27ae60; font-size:16px;">₹${d.totalAmount}</span>
-            <button onclick="window.printOrderReceipt('${dDoc.id}')" style="background:#f1f2f6; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">🖨️ View Receipt</button>
-        </div>
-    </div>`;
-}
-                    // --- DEFAULT LIST LOGIC (Orders/Grievances) ---
-                    else {
-                        html += `<div style="padding:10px; border-bottom:1px solid #eee; font-size:13px;"><b>${d.status || 'Received'}</b> - ${d.courseName || d.animalType || d.type || 'Request'}</div>`;
                     }
                 }
+                // --- VET SERVICE TRACKER LOGIC ---
+                else if (c.id === 'list-vet') {
+                    const status = d.status || "Pending";
+                    let step = 1;
+                    let color = "#f39c12"; 
+                    if(status === "Assigned") { step = 2; color = "#3498db"; }
+                    else if(status === "Vet Dispatched") { step = 3; color = "#9b59b6"; }
+                    else if(status === "Arrived / Treatment") { step = 4; color = "#e67e22"; }
+                    else if(status === "Completed") { step = 5; color = "#27ae60"; }
+
+                    html += `
+                    <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 10px rgba(0,0,0,0.03);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span style="font-weight:bold; color:#2c3e50; font-size:14px;">🚑 ${d.animalType} Support</span>
+                            <span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${color}; color:white; font-weight:bold;">${status.toUpperCase()}</span>
+                        </div>
+                        <div style="height:6px; background:#f0f0f0; border-radius:10px; overflow:hidden; display:flex; margin:15px 0 5px 0;">
+                            <div style="width:${(step/5)*100}%; background:${color}; height:100%; transition:0.5s;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; font-size:9px; color:#999; text-transform:uppercase;">
+                            <span>Request</span><span>Assigned</span><span>On Way</span><span>Clinic</span><span>Finish</span>
+                        </div>
+                    </div>`;
+                }
+                // --- PHARMACY ORDERS LOGIC ---
+                else if (c.id === 'list-orders') {
+                    const status = d.status || "Order Placed";
+                    const isCancellable = status.toLowerCase() === "order placed"; 
+                    let color = "#3498db"; 
+                    if(status === "Delivered") color = "#27ae60";
+                    else if(status === "Cancelled") color = "#e74c3c";
+
+                    html += `
+                    <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:12px; margin-bottom:15px; box-shadow:0 4px 12px rgba(0,0,0,0.03); width: 100%; box-sizing: border-box;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span style="font-weight:bold; color:#2c3e50;">📦 Order Status</span>
+                            <span style="font-size:10px; padding:3px 8px; border-radius:12px; background:${color}; color:white; font-weight:bold;">${status.toUpperCase()}</span>
+                        </div>
+                        <div style="font-size:13px; color:#666; margin-bottom:10px;">
+                            ${d.items ? d.items.map(i => `• ${i.name}`).join('<br>') : 'Medicine Order'}
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f8f9fa; padding-top:10px;">
+                            <span style="font-weight:bold; color:#27ae60; font-size:16px;">₹${d.totalAmount}</span>
+                            <div style="display:flex; gap:5px;">
+                                ${isCancellable ? `<button onclick="window.cancelOrder('${id}')" style="background:#fff5f5; color:#e74c3c; border:1px solid #feb2b2; padding:6px 12px; border-radius:6px; font-size:11px; cursor:pointer;">Cancel</button>` : ''}
+                                <button onclick="window.printOrderReceipt('${id}')" style="background:#f1f2f6; border:none; padding:6px 12px; border-radius:6px; font-size:11px; cursor:pointer;">Receipt</button>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+                // --- GRIEVANCES LOGIC ---
+                else if (c.id === 'list-grievances') {
+                    const status = d.status || "Pending";
+                    html += `
+                    <div style="padding:15px; border-bottom:1px solid #eee; background: #fff; margin-bottom:10px; border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <b>${d.category}</b>
+                            <span style="font-size:10px; background:${status === 'Resolved' ? '#27ae60' : '#e67e22'}; color:white; padding:2px 8px; border-radius:10px;">${status}</span>
+                        </div>
+                        <p style="font-size:12px; color:#666; margin:8px 0;">${(d.message || "").substring(0, 50)}...</p>
+                        <button onclick="window.printGrievance('${id}')" style="background:#f1f2f6; border:none; padding:4px 10px; border-radius:4px; font-size:11px; cursor:pointer;">🖨️ View & Print</button>
+                    </div>`;
+                }
+                else {
+                    html += `<div style="padding:10px; border-bottom:1px solid #eee; font-size:13px;"><b>${d.status || 'Received'}</b> - ${d.courseName || d.animalType || 'Request'}</div>`;
+                }
             });
-            cont.innerHTML = html || `<p style='font-size:12px; color:#999;'>No history found.</p>`;
+
+            // --- FINAL RENDER ---
+            cont.innerHTML = html;
+            
+            // Only update certificate container if we are currently looking at enrollments
+            if (c.col === 'enrollments' && certContainer) {
+                certContainer.innerHTML = certHtml || "<p style='font-size:12px; color:#999;'>No certificates issued yet.</p>";
+            }
+
+        }, (error) => {
+            console.error(`Error loading ${c.col}:`, error);
         });
     });
 };
@@ -326,6 +399,7 @@ window.checkAccess = (d) => {
 };
 
 window.viewBatchDetails = async (enrollId) => {
+    if(typeof closeDashboardModal === 'function') closeDashboardModal();
     Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading() });
     const d = (await getDoc(doc(db, "enrollments", enrollId))).data();
     const access = window.checkAccess(d);
@@ -359,38 +433,67 @@ window.viewBatchDetails = async (enrollId) => {
     });
 };
 window.loadPlaylist = async (courseId, enrollId) => {
-    const q = query(collection(db, "lectures"), where("courseId", "==", courseId), orderBy("order", "asc"));
-    const snap = await getDocs(q);
     const div = document.getElementById('lecture-list');
     const examBtn = document.getElementById('exam-btn');
+    if (!div) return;
 
-    if (snap.empty) { div.innerHTML = "<p>No lectures yet.</p>"; return; }
+    // 1. Ensure we have a valid Course ID
+    if (!courseId) {
+        div.innerHTML = "<p style='color:red;'>Error: Course ID missing.</p>";
+        return;
+    }
 
-    // Check watched status from local storage
-    const watched = JSON.parse(localStorage.getItem(`watched_${enrollId}`)) || [];
+    // 2. Query the lectures collection
+    const q = query(
+        collection(db, "lectures"), 
+        where("courseId", "==", courseId), 
+        orderBy("order", "asc")
+    );
 
-    div.innerHTML = snap.docs.map((doc, i) => {
-        const isWatched = watched.includes(doc.id);
-        return `
-        <div style="display:flex; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #eee;">
-            <span style="background:${isWatched ? '#27ae60' : '#2980b9'}; color:white; width:25px; height:25px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">${i+1}</span>
-            <div style="flex:1;"><b style="cursor:pointer;" onclick="window.playLecture('${doc.data().videoId}', '${doc.id}', '${enrollId}', '${courseId}')">${doc.data().title}</b></div>
-            <span style="font-size:10px; color:${isWatched ? 'green' : '#999'};">${isWatched ? '✅ Watched' : '⚪ Pending'}</span>
-        </div>`;
-    }).join('');
-
-    // 🔥 ENABLE BUTTON logic
-    if (snap.size > 0 && watched.length >= snap.size) {
-        examBtn.disabled = false;
-        examBtn.style.background = "#27ae60";
-        examBtn.style.cursor = "pointer";
-        examBtn.innerText = "🚀 Start Final Exam";
+    try {
+        const snap = await getDocs(q);
         
-        // Link to the course exam link
-        const cDoc = await getDoc(doc(db, "courses", courseId));
-        if (cDoc.exists() && cDoc.data().testLink) {
-            examBtn.onclick = () => window.openOnlineExam(cDoc.data().testLink, enrollId);
+        // 3. Get student data for status checks
+        const enrollSnap = await getDoc(doc(db, "enrollments", enrollId));
+        const d = enrollSnap.exists() ? enrollSnap.data() : {};
+
+        if (snap.empty) { 
+            div.innerHTML = "<p style='color:#999; padding:10px;'>No lectures uploaded for this course yet.</p>"; 
+            return; 
         }
+
+        const watched = JSON.parse(localStorage.getItem(`watched_${enrollId}`)) || [];
+
+        // 4. Generate the HTML
+        div.innerHTML = snap.docs.map((docSnap, i) => {
+            const lec = docSnap.data();
+            const isWatched = watched.includes(docSnap.id);
+            return `
+            <div style="display:flex; align-items:center; gap:10px; padding:12px; border-bottom:1px solid #eee; background:white;">
+                <span style="background:${isWatched ? '#27ae60' : '#2980b9'}; color:white; width:25px; height:25px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">${lec.order || i+1}</span>
+                <div style="flex:1;">
+                    <b style="cursor:pointer; color:#2c3e50;" onclick="window.playLecture('${lec.videoId}', '${docSnap.id}', '${enrollId}', '${courseId}')">${lec.title}</b>
+                </div>
+                <span style="font-size:10px; color:${isWatched ? 'green' : '#999'};">${isWatched ? '✅ Watched' : '⚪ Pending'}</span>
+            </div>`;
+        }).join('');
+
+        // 5. Enable Exam/Certificate if all watched
+        if (watched.length >= snap.size && examBtn) {
+            examBtn.disabled = false;
+            examBtn.style.background = "#27ae60";
+            examBtn.style.cursor = "pointer";
+            
+            if (d.courseStatus === "Completed") {
+                examBtn.innerText = "🎓 Download Certificate";
+                examBtn.onclick = () => window.printCertificate(enrollId);
+            } else {
+                examBtn.innerText = "🚀 Start Final Exam";
+            }
+        }
+    } catch (error) {
+        console.error("Lecture Load Error:", error);
+        div.innerHTML = "<p style='color:red;'>Failed to load playlist. Check console for index error.</p>";
     }
 };
 
@@ -594,8 +697,10 @@ window.bookVet = async () => {
         ['customer-name', 'customer-phone', 'vet-address', 'case-details'].forEach(id => document.getElementById(id).value = "");
     } catch (e) {
         Swal.fire('Error', 'Failed to send request.', 'error');
+
     }
 };
+
 
 // ==========================================
 // --- 6. MAP UTILITIES ---
@@ -618,7 +723,7 @@ window.openMapPicker = (inputId) => {
 window.confirmMapLocation = async () => {
     if(!window.pMark) return window.closeMapPicker();
     const ll = window.pMark.getLatLng();
-    window.selectedGpsLocation = `https://maps.google.com/?q=${ll.lat},${ll.lng}`;
+    window.selectedGpsLocation = `https://www.google.com/maps?q=${ll.lat},${ll.lng}`;
     document.getElementById('universal-map-modal').style.display = 'none';
     try {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${ll.lat}&lon=${ll.lng}`);
@@ -664,8 +769,6 @@ window.showLogin = () => {
 // 1. Render the Cart UI (Updates automatically when called)
 window.renderCart = () => {
     let cart = JSON.parse(localStorage.getItem('ddp_cart')) || [];
-    
-    // Update the number on the Shopping Cart badge
     const badge = document.getElementById('cart-badge'); 
     if (badge) badge.innerText = cart.length;
 
@@ -676,11 +779,15 @@ window.renderCart = () => {
         } else {
             let total = 0;
             let html = cart.map((item, idx) => {
-                total += Number(item.price);
+                const itemTotal = Number(item.price) * Number(item.qty);
+                total += itemTotal;
                 return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee; font-size:13px;">
-                    <span>${item.name}</span>
-                    <b>₹${item.price}</b>
+                    <div style="flex:1;">
+                        <div style="font-weight:bold;">${item.name}</div>
+                        <small style="color:#666;">₹${item.price} x ${item.qty}</small>
+                    </div>
+                    <b style="margin-right:10px;">₹${itemTotal}</b>
                     <button onclick="window.removeFromCart(${idx})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">✖</button>
                 </div>`;
             }).join('');
@@ -741,14 +848,14 @@ window.checkoutCart = async () => {
 
     if (formValues) {
         Swal.fire({ title: 'Placing Order...', didOpen: () => Swal.showLoading() });
-        
+        const standardPhone = formValues.phone.replace(/\D/g, "").slice(-10);
         const total = cart.reduce((sum, i) => sum + Number(i.price), 0);
         const itemsList = cart.map(i => `• ${i.name} - ₹${i.price}`).join('\n');
 
         // 1. Save to Database
         await addDoc(collection(db, "orders"), {
             customerName: formValues.name,
-            phone: formValues.phone,
+            phone: standardPhone,
             address: formValues.address,
             items: cart,
             totalAmount: total,
@@ -845,7 +952,7 @@ window.setupDetailedAdmission = async () => {
 
         // Locate this in app.js inside setupDetailedAdmission -> form.onsubmit
 const data = {
-    courseId: dropdown.value,
+    courseId: document.getElementById('adm-course').value,
     courseName: sel.dataset.name,
     totalFee: Number(sel.dataset.fee),
     userName: document.getElementById('adm-name').value,
@@ -991,33 +1098,7 @@ window.submitGrievance = async () => {
         Swal.fire('Error', 'Submission failed.', 'error');
     }
 };
-// Load playlist with completion check
-window.loadPlaylist = async (courseId, enrollId) => {
-    const q = query(collection(db, "lectures"), where("courseId", "==", courseId), orderBy("order", "asc"));
-    const snap = await getDocs(q);
-    const div = document.getElementById('lecture-list');
-    const examBtn = document.getElementById('exam-btn');
 
-    // Simple completion tracking logic (check local storage or user doc)
-    const watched = JSON.parse(localStorage.getItem(`watched_${enrollId}`)) || [];
-    
-    div.innerHTML = snap.docs.map((doc, i) => {
-        const isWatched = watched.includes(doc.id);
-        return `
-        <div style="display:flex; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #eee;">
-            <div style="flex:1;"><b style="cursor:pointer;" onclick="window.playLecture('${doc.data().videoId}', '${doc.id}', '${enrollId}')">${doc.data().title}</b></div>
-            <span style="font-size:10px; color:${isWatched ? 'green' : '#999'};">${isWatched ? '✅ Watched' : '⚪ Pending'}</span>
-        </div>`;
-    }).join('');
-
-    // Enable exam if all are watched
-    if (watched.length >= snap.size && snap.size > 0) {
-        examBtn.disabled = false;
-        examBtn.style.background = "#27ae60";
-        examBtn.style.cursor = "pointer";
-        examBtn.innerText = "🚀 Start Final Online Exam";
-    }
-};
 
 window.playLecture = (vId, lecId, enrollId) => {
     // Record as watched
@@ -1078,67 +1159,6 @@ window.printGrievance = async (id) => {
     
 window.handleLogout = () => signOut(auth).then(() => location.href="index.html");
 
-window.onload = () => { 
-    if (typeof loadAllContent === 'function') loadAllContent();
-    window.setupDetailedAdmission();
-    window.renderCart();
-    const badge = document.getElementById('cart-badge'); 
-    if (badge) badge.innerText = (JSON.parse(localStorage.getItem('ddp_cart')) || []).length;
-    if(window.renderCart) window.renderCart(); // Forces cart UI to load on page refresh
-
-    // Pharmacy Live Search Logic
-    const searchBox = document.getElementById('product-search');
-    if (searchBox) {
-        searchBox.addEventListener('keyup', (e) => {
-            const term = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.product-card');
-            cards.forEach(card => {
-                const title = card.querySelector('h4').innerText.toLowerCase();
-                card.style.display = title.includes(term) ? 'block' : 'none';
-            });
-        });
-    }
-    // --- Inside window.onload in app.js ---
-    // Call the function on page load
-
-
-// Simple Visitor Counter
-let visits = localStorage.getItem('ddp_visits') || 0;
-visits = parseInt(visits) + 1;
-localStorage.setItem('ddp_visits', visits);
-const visitorEl = document.getElementById('visitor-count');
-if (visitorEl) visitorEl.innerText = visits.toLocaleString();
-
-// Auto-Set Last Updated Date (Optional)
-const updateEl = document.getElementById('last-updated');
-if (updateEl) {
-    const today = new Date();
-    updateEl.innerText = today.toLocaleDateString('en-GB', {
-        day: '2-digit', month: 'short', year: 'numeric'
-    });
-}
-    // Add this inside the loadAllContent() function in app.js
-const galleryGrid = document.getElementById('gallery-grid');
-if (galleryGrid) {
-    onSnapshot(query(collection(db, "gallery"), orderBy("timestamp", "desc")), (snap) => {
-        if (snap.empty) {
-            galleryGrid.innerHTML = "<p style='text-align:center;'>No photos in the gallery yet.</p>";
-            return;
-        }
-        galleryGrid.innerHTML = snap.docs.map(docSnap => {
-            const g = docSnap.data();
-            return `
-            <div class="gallery-item" style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-                <img src="${g.url}" style="width:100%; height:250px; object-fit:cover; display:block;" alt="${g.caption}">
-                <div style="padding:15px; border-top:1px solid #eee;">
-                    <p style="margin:0; font-size:14px; color:#555; font-weight:500;">${g.caption || 'DDP Saharsa Impact'}</p>
-                    <small style="color:#999; font-size:11px;">${g.timestamp?.toDate().toLocaleDateString() || ''}</small>
-                </div>
-            </div>`;
-        }).join('');
-    });
-}
-};
 // --- 🖨️ PHARMACY RECEIPT PRINTING ---
 window.printOrderReceipt = async (orderId) => {
     const snap = await getDoc(doc(db, "orders", orderId));
@@ -1201,4 +1221,314 @@ window.printOrderReceipt = async (orderId) => {
         </html>
     `);
     win.document.close();
+};
+
+
+// --- DYNAMIC ABOUT SECTION SYNC ---
+
+// Function to load the "About" data once
+async function loadDynamicAbout() {
+    const aboutDoc = await getDoc(doc(db, "settings", "about"));
+    if (aboutDoc.exists()) {
+        const data = aboutDoc.data();
+        if(document.getElementById('display-about-heading')) 
+            document.getElementById('display-about-heading').innerText = data.heading;
+        if(document.getElementById('display-about-text')) 
+            document.getElementById('display-about-text').innerText = data.text;
+        if(document.getElementById('display-about-image') && data.image) 
+            document.getElementById('display-about-image').src = data.image;
+    }
+}
+
+// Function to listen for real-time updates to the "About" section
+function syncAboutSection() {
+    onSnapshot(doc(db, "settings", "about"), (docSnap) => {
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const richContent = data.text || "";
+
+            // 1. Homepage Minimal Version (Strip HTML for clean look)
+            const homeText = document.getElementById('home-about-text');
+            if (homeText) {
+                let tempDiv = document.createElement("div");
+                tempDiv.innerHTML = richContent;
+                let plainText = tempDiv.textContent || tempDiv.innerText || "";
+                homeText.innerText = plainText.length > 200 ? plainText.substring(0, 200) + "..." : plainText;
+            }
+
+            // 2. About Page Full Version (Support HTML formatting)
+            const aboutPageText = document.getElementById('about-page-text');
+            if (aboutPageText) {
+                aboutPageText.innerHTML = richContent; 
+            }
+
+            // 3. Update Headings
+            const homeHeading = document.getElementById('home-about-heading');
+            const aboutHeading = document.getElementById('about-page-heading');
+            
+            if (homeHeading) homeHeading.innerText = data.heading;
+            if (aboutHeading) aboutHeading.innerText = data.heading;
+        }
+    }); 
+}
+
+// Function to highlight the current page in the navigation bar
+function highlightCurrentPage() {
+    const currentPage = window.location.pathname.split("/").pop() || "index.html";
+    const navLinks = document.querySelectorAll('.nav-links a');
+
+    navLinks.forEach(link => {
+        const linkPage = link.getAttribute('href');
+        if (linkPage === currentPage) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
+}
+// --- Ensure this is at the bottom of app.js ---
+window.cancelOrder = async (orderId) => {
+    const confirm = await Swal.fire({
+        title: 'Cancel Order?',
+        text: "Are you sure you want to cancel this order?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        confirmButtonText: 'Yes, cancel it'
+    });
+
+    if (confirm.isConfirmed) {
+        try {
+            // Important: Use 'Cancelled' exactly as it appears in your rules
+            // --- Inside cancelOrder in app.js ---
+await updateDoc(doc(db, "orders", orderId), {
+    status: "Cancelled", // Must match the rule: request.resource.data.status == 'Cancelled'
+    cancelledAt: serverTimestamp()
+});
+
+            window.sendAdminAlert(`🚫 <b>ORDER CANCELLED BY CUSTOMER</b>\nOrder ID: ${orderId.slice(-8).toUpperCase()}`);
+            Swal.fire('Cancelled', 'Your order has been cancelled.', 'success');
+        } catch (e) {
+            console.error("Cancellation Error:", e);
+            // If it still says insufficient permissions, double-check that the phone 
+            // number in the Firestore document ends with your login ID.
+            Swal.fire('Error', 'Permission Denied. Please contact admin.', 'error');
+        }
+    }
+};
+window.handleAddToCart = (id, name, price) => {
+    // Get the specific quantity from the input field
+    const qtyInput = document.getElementById(`qty-${id}`);
+    const quantity = parseInt(qtyInput.value) || 1;
+
+    // Call the updated addToCart function
+    window.addToCart(id, name, price, quantity);
+};
+
+// Update your existing addToCart to accept quantity
+window.addToCart = (id, name, price, qty = 1) => {
+    let cart = JSON.parse(localStorage.getItem('ddp_cart')) || [];
+    
+    // Check if item already exists to update quantity instead of duplicating
+    const existingItem = cart.find(item => item.id === id);
+    if (existingItem) {
+        existingItem.qty += qty;
+    } else {
+        cart.push({ id, name, price, qty: qty });
+    }
+    
+    localStorage.setItem('ddp_cart', JSON.stringify(cart));
+    window.renderCart(); 
+    
+    Swal.fire({
+        toast: true, position: 'top-end', icon: 'success', 
+        title: `${qty} x ${name} added`, showConfirmButton: false, timer: 1500
+    });
+};
+// Ensure this is in app.js so farmers can trigger it
+window.printMarksheet = async (enrollId) => {
+    const snap = await getDoc(doc(db, "enrollments", enrollId));
+    const d = snap.data();
+    if (!d) return Swal.fire('Error', 'No record found.', 'error');
+
+    const win = window.open('', '', 'width=900,height=700');
+    const studentName = (d.userName || 'Student').toUpperCase();
+    
+    win.document.write(`
+        <html>
+        <head><title>Marksheet - ${studentName}</title></head>
+        <body style="font-family:sans-serif; padding:50px; border:10px double #27ae60;">
+            <center>
+                <img src="DDP logo.png" style="height:70px;">
+                <h1 style="color:#2c3e50; margin:10px 0;">Dairy Development Programme Saharsa</h1>
+                <h3 style="background:#27ae60; color:white; padding:10px; display:inline-block;">OFFICIAL MARKSHEET</h3>
+            </center>
+            <div style="margin-top:40px; line-height:2;">
+                <p><b>Student Name:</b> ${studentName}</p>
+                <p><b>Course Name:</b> ${d.courseName}</p>
+                <p><b>Enrollment ID:</b> ${enrollId.slice(-8).toUpperCase()}</p>
+                <hr>
+                <table style="width:100%; text-align:left; border-collapse:collapse;">
+                    <tr style="background:#f4f4f4;"><th style="padding:10px;">Subject</th><th>Max Marks</th><th>Marks Obtained</th></tr>
+                    <tr><td style="padding:10px;">Final Online Examination</td><td>100</td><td><b>${d.examScore || '0'}</b></td></tr>
+                </table>
+                <hr>
+                <p><b>Final Result:</b> PASSED</p>
+            </div>
+            <center><button onclick="window.print()" style="margin-top:30px; padding:10px 20px; background:#2c3e50; color:white; border:none; cursor:pointer;">Print Now</button></center>
+        </body></html>
+    `);
+    win.document.close();
+};
+// ==========================================
+// --- 🎓 OFFICIAL CERTIFICATE GENERATOR ---
+// ==========================================
+window.printCertificate = async (enrollId) => {
+    // 1. Fetch the student's enrollment record
+    const snap = await getDoc(doc(db, "enrollments", enrollId));
+    const d = snap.data();
+    
+    // 2. Validation Checks
+    if (!d) return Swal.fire('Error', 'No enrollment data found.', 'error');
+    if (d.courseStatus !== "Completed") {
+        return Swal.fire('Restricted', 'Certificate not yet issued. Please complete your exam or contact Admin.', 'warning');
+    }
+
+    // 3. Create a new window for the certificate
+    const win = window.open('', '', 'width=1100,height=850');
+    if (!win) return Swal.fire('Blocked', 'Please allow popups to view your certificate.', 'warning');
+
+    // 4. Data Preparation
+    const studentName = (d.userName || 'Student').toUpperCase();
+    const courseTitle = d.courseName || 'Professional Training';
+    const issueDate = d.certIssuedAt ? d.certIssuedAt.toDate().toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
+    const certSerial = enrollId.slice(-8).toUpperCase();
+
+    // 5. High-Resolution Certificate Template
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Certificate - ${studentName}</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Playfair+Display:wght@700&display=swap');
+                body { margin: 0; padding: 0; background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                .cert-border { width: 950px; height: 650px; background: #fffdf5; padding: 30px; border: 15px solid #2c3e50; box-sizing: border-box; position: relative; }
+                .cert-inner { border: 5px solid #e67e22; height: 100%; width: 100%; box-sizing: border-box; padding: 40px; text-align: center; position: relative; }
+                .logo { height: 80px; margin-bottom: 10px; }
+                h1 { font-family: 'Playfair Display', serif; font-size: 50px; color: #2c3e50; margin: 10px 0; }
+                .sub-text { font-size: 20px; color: #7f8c8d; margin: 20px 0; }
+                .student-name { font-family: 'Pinyon Script', cursive; font-size: 65px; color: #e67e22; margin: 10px 0; border-bottom: 1px solid #ddd; display: inline-block; padding: 0 40px; }
+                .course-name { font-weight: bold; font-size: 26px; color: #2c3e50; margin: 10px 0; }
+                .footer-sigs { margin-top: 60px; display: flex; justify-content: space-around; }
+                .sig-box { border-top: 1px solid #2c3e50; width: 200px; padding-top: 10px; font-weight: bold; font-size: 14px; }
+                @media print { .print-btn { display: none; } body { background: white; } }
+            </style>
+        </head>
+        <body>
+            <div class="cert-border">
+                <div class="cert-inner">
+                    <img src="DDP logo.png" class="logo">
+                    <p style="margin:0; font-weight:bold; letter-spacing:2px; color:#2980b9;">DAIRY DEVELOPMENT PROGRAMME SAHARSA</p>
+                    
+                    <h1>Certificate of Excellence</h1>
+                    <p class="sub-text">This is to certify that</p>
+                    
+                    <div class="student-name">${studentName}</div>
+                    
+                    <p class="sub-text">has successfully completed the professional training in</p>
+                    <div class="course-name">${courseTitle}</div>
+                    
+                    <p style="margin-top:20px;">Issued on: <b>${issueDate}</b> | Certificate ID: <b>${certSerial}</b></p>
+
+                    <div class="footer-sigs">
+                        <div class="sig-box">Program Director</div>
+                        <div class="sig-box">Authorized Signatory</div>
+                    </div>
+
+                    <button class="print-btn" onclick="window.print()" style="margin-top:30px; padding:10px 25px; background:#2980b9; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Print Certificate</button>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    
+    win.document.close();
+};
+
+// --- MAIN INITIALIZATION ---
+// This ensures all functions run only AFTER the page has finished loading
+window.addEventListener('load', () => {
+    loadDynamicAbout();
+    syncAboutSection();
+    highlightCurrentPage();
+});
+
+// Main Window Load Handler
+window.onload = () => { 
+    // 1. CORE DATA & UI LOADERS
+    if (typeof loadAllContent === 'function') loadAllContent();
+    if (window.setupDetailedAdmission) window.setupDetailedAdmission();
+    if (window.renderCart) window.renderCart(); 
+    
+    highlightCurrentPage();
+    injectWhatsAppButton();
+    loadDynamicAbout(); // Added to ensure about section loads
+    syncAboutSection(); // Added for real-time about updates
+
+    // 2. PHARMACY LIVE SEARCH LOGIC
+    const searchBox = document.getElementById('product-search');
+    if (searchBox) {
+        searchBox.addEventListener('keyup', (e) => {
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                const title = card.querySelector('h4').innerText.toLowerCase();
+                card.style.display = title.includes(term) ? 'block' : 'none';
+            });
+        });
+    }
+
+    // 3. VISITOR COUNTER
+    let visits = parseInt(localStorage.getItem('ddp_visits') || 0) + 1;
+    localStorage.setItem('ddp_visits', visits);
+    const visitorEl = document.getElementById('visitor-count');
+    if (visitorEl) visitorEl.innerText = visits.toLocaleString();
+
+    // 4. AUTO-SET LAST UPDATED DATE
+    const updateEl = document.getElementById('last-updated');
+    if (updateEl) {
+        updateEl.innerText = new Date().toLocaleDateString('en-GB', {
+            day: '2-digit', month: 'short', year: 'numeric'
+        });
+    }
+
+    // 5. GALLERY SNAPSHOT (REAL-TIME)
+    const galleryGrid = document.getElementById('gallery-grid');
+    if (galleryGrid) {
+        onSnapshot(query(collection(db, "gallery"), orderBy("timestamp", "desc")), (snap) => {
+            if (snap.empty) {
+                galleryGrid.innerHTML = "<p style='text-align:center;'>No photos in the gallery yet.</p>";
+                return;
+            }
+            galleryGrid.innerHTML = snap.docs.map(docSnap => {
+                const g = docSnap.data();
+                return `
+                <div class="gallery-item" style="background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+                    <img src="${g.url}" style="width:100%; height:250px; object-fit:cover; display:block;" alt="${g.caption}">
+                    <div style="padding:15px; border-top:1px solid #eee;">
+                        <p style="margin:0; font-size:14px; color:#555; font-weight:500;">${g.caption || 'DDP Saharsa Impact'}</p>
+                        <small style="color:#999; font-size:11px;">${g.timestamp?.toDate().toLocaleDateString() || ''}</small>
+                    </div>
+                </div>`;
+            }).join('');
+        });
+    }
+
+    // 6. CART BADGE UPDATE
+    const badge = document.getElementById('cart-badge'); 
+    if (badge) {
+        const cart = JSON.parse(localStorage.getItem('ddp_cart')) || [];
+        badge.innerText = cart.length;
+    }
 };
