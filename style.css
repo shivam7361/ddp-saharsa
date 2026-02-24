@@ -80,20 +80,7 @@ body { font-family: sans-serif; margin: 0; background: #f4f7f6; overflow-x: hidd
 .cart-icon-wrapper { position: relative; text-decoration: none; font-size: 22px; }
 #cart-badge { position: absolute; top: -8px; right: -10px; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 50%; font-size: 10px; font-weight: bold; border: 2px solid white; }
 
-/* --- 6. SIDE FLOATING BUTTON & ANIMATIONS --- */
-.side-enquiry {
-    position: fixed; right: -45px; top: 50%; transform: rotate(-90deg) translateY(-50%);
-    background: #27ae60; color: white; padding: 12px 25px; border-radius: 10px 10px 0 0;
-    cursor: pointer; font-weight: bold; z-index: 2000; box-shadow: -4px 0 15px rgba(0,0,0,0.2);
-    transition: all 0.3s ease; animation: sidePulse 2s infinite;
-}
-.side-enquiry:hover { right: -35px; background: #1e8449; animation: none; }
 
-@keyframes sidePulse {
-    0% { box-shadow: -4px 0 0 rgba(39, 174, 96, 0.4); }
-    70% { box-shadow: -4px 0 15px rgba(39, 174, 96, 0); }
-    100% { box-shadow: -4px 0 0 rgba(39, 174, 96, 0); }
-}
 
 /* --- 7. FOOTER --- */
 .main-footer { background: #2c3e50; color: white; padding: 60px 20px 20px; margin-top: 50px; }
@@ -517,4 +504,126 @@ h2 {
         flex-direction: column;
         text-align: center;
     }
+}
+html {
+    scroll-behavior: smooth;
+}
+/* This creates the pulse animation */
+@keyframes pulse-red {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(192, 57, 43, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); }
+}
+
+/* This applies the animation to the button */
+.pulse-animation {
+    animation: pulse-red 2s infinite;
+    display: inline-block; /* Ensures the animation renders correctly */
+}
+/* Fixed Sidebar Container */
+.side-enquiry {
+    position: fixed;
+    right: -40px; /* Keeps it tucked to the side */
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg); /* Rotates the text to stand vertically */
+    background: #27ae60;
+    color: white;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    z-index: 10000;
+    transition: 0.3s;
+    /* Shimmer requirements */
+    display: block;
+    width: auto;
+    overflow: hidden;
+}
+
+.side-enquiry:hover {
+    right: -35px; /* Slight pop-out on hover */
+}
+
+/* Specific Shimmer for Rotated Sidebar */
+.shimmer-sidebar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to right, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-20deg);
+    animation: shimmer-sweep 3s infinite;
+}
+
+@keyframes shimmer-sweep {
+    0% { left: -150%; }
+    100% { left: 150%; }
+}
+/* Container for the Logo and Branding */
+.logo-box {
+    display: flex;
+    align-items: center;
+    max-width: 70%; /* Prevents logo from pushing the menu toggle off-screen */
+}
+
+#main-logo {
+    height: 50px; /* Standard desktop height */
+    width: auto;
+    transition: 0.3s;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px;
+    line-height: 1.2;
+}
+
+.brand-text .navy { color: #2c3e50; font-weight: bold; font-size: 18px; }
+.brand-text .green { color: #27ae60; font-weight: bold; font-size: 16px; }
+
+/* --- Mobile Responsive Fixes --- */
+@media (max-width: 768px) {
+    #main-logo {
+        height: 40px; /* Smaller logo for mobile */
+    }
+
+    .brand-text .navy { font-size: 14px; }
+    .brand-text .green { font-size: 12px; }
+    
+    /* Optional: If it still feels crowded, hide the text and show only the logo */
+    /* .brand-text { display: none; } */
+    
+    .nav-container {
+        padding: 0 15px;
+        justify-content: space-between;
+    }
+}
+/* Style for the current page link */
+.nav-links li a.active {
+    color: #27ae60 !important; /* DDP Green */
+    font-weight: bold;
+    border-bottom: 2px solid #27ae60;
+    padding-bottom: 5px;
+}
+/* Hide Google Translate Branding */
+.goog-logo-link, .goog-te-gadget span, .goog-te-banner-frame { 
+    display: none !important; 
+}
+.skiptranslate { 
+    margin-top: 0 !important; 
+}
+body { 
+    top: 0 !important; 
+}
+#google_translate_element { 
+    height: 38px; 
+    overflow: hidden; 
 }
