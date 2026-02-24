@@ -20,6 +20,8 @@
         button:hover { opacity: 0.8; transform: translateY(-2px); }
         .admin-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
     </style>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 </head>
 <body style="background: #f4f7f6;">
     
@@ -164,7 +166,18 @@
         <section id="pharmacy-orders">
             <h2 style="border-color: #27ae60;">💊 Pharmacy Order History</h2>
             <table>
-                <thead><tr><th>Date</th><th>Order Details</th><th>Address</th><th>Status</th><th>Action</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Order Details</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>GPS Location</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
                 <tbody id="orders-table"></tbody> 
             </table>
         </section>
@@ -193,6 +206,20 @@
                 <button onclick="window.postNotice()" style="background: #8e44ad; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold;">Publish Notice</button>
             </div>
         </section>
+        <section id="manage-notices" style="border-top: 5px solid #8e44ad; margin-top: 20px;">
+            <h3>📋 Manage Existing Notices</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-notice-list">
+                    </tbody>
+            </table>
+        </section>
+
 
         <section class="admin-card" style="border-top: 5px solid #27ae60;">
             <h2 style="color: #27ae60;">📝 Edit Homepage About Section</h2>
@@ -200,7 +227,8 @@
                 <label style="font-weight:bold; font-size:13px;">About Heading</label>
                 <input type="text" id="admin-about-heading" placeholder="e.g. Empowering Farmers with Tech">
                 <label style="font-weight:bold; font-size:13px;">About Paragraph</label>
-                <textarea id="admin-about-text" placeholder="Main description..." style="height: 100px;"></textarea>
+                <label style="font-weight:bold; font-size:13px;">Premium About Content (MS Word Style)</label>
+<div id="admin-about-editor" style="height: 300px; background: white; margin-bottom: 15px; border-radius: 5px;"></div>
                 <label style="font-weight:bold; font-size:13px;">About Image URL</label>
                 <input type="text" id="admin-about-image" placeholder="Paste image link here">
                 <button onclick="window.updateAboutSection()" style="background: #27ae60; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">💾 Save Homepage Changes</button>
