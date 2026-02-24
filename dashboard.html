@@ -33,6 +33,7 @@
                 </a>
             </div>
             <div class="nav-auth-wrapper">
+                <div id="google_translate_element" style="margin-right: 15px;"></div>
                 <span id="dash-user-name" style="font-weight: bold; color: #27ae60; margin-right: 15px;">Farmer</span>
                 <a href="index.html" style="margin-right: 15px; color: #2c3e50; font-weight: bold; text-decoration: none; font-size: 14px;">🏠 Home</a>
                 <button onclick="window.handleLogout()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">Logout</button>
@@ -81,36 +82,53 @@
         </div>
         
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #2980b9; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: #2980b9;">📚 Academy Progress</h3>
-                    <span style="font-size: 10px; color: #666;">Real-time</span>
-                </div>
-                <div id="list-courses">
-                    <p style="font-size: 12px; color: #999;">Checking enrollments...</p>
-                </div>
+    
+            <div onclick="openDashboardModal('modal-academy')" style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #2980b9; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer;">
+                <h3 style="margin: 0; color: #2980b9;">📚 Academy Progress</h3>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">View batch details & lectures</p>
             </div>
-
-            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #8e44ad; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                <h3 style="margin-top: 0; color: #8e44ad;">🚩 Filed Grievances</h3>
-                <div id="list-grievances" style="margin-top: 15px;">
-                    <p style="font-size: 12px; color: #999;">Loading history...</p>
-                </div>
+        
+            <div onclick="openDashboardModal('modal-grievance')" style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #8e44ad; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer;">
+                <h3 style="margin: 0; color: #8e44ad;">🚩 Filed Grievances</h3>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">Check complaint status</p>
             </div>
-
-            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #27ae60; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                <h3 style="margin-top: 0; color: #27ae60;">🛒 Pharmacy Orders</h3>
-                <div id="list-orders">
-                    <p style="font-size: 12px; color: #999;">Syncing orders...</p>
-                </div>
+        
+            <div onclick="openDashboardModal('modal-pharmacy')" style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #27ae60; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer;">
+                <h3 style="margin: 0; color: #27ae60;">🛒 Pharmacy Orders</h3>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">Syncing orders & receipts</p>
             </div>
-
-            <div style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #c0392b; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-                <h3 style="margin-top: 0; color: #c0392b;">🚑 Vet Requests</h3>
-                <div id="list-vet">
-                    <p style="font-size: 12px; color: #999;">Loading status...</p>
-                </div>
+        
+            <div onclick="openDashboardModal('modal-vet')" style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #c0392b; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer;">
+                <h3 style="margin: 0; color: #c0392b;">🚑 Vet Requests</h3>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">Loading status...</p>
             </div>
+        
+            <div onclick="openDashboardModal('modal-cert')" style="background: #fff; padding: 20px; border-radius: 12px; border-top: 4px solid #9b59b6; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer;">
+                <h3 style="margin: 0; color: #9b59b6;">🎓 Certificates</h3>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">Download verified documents</p>
+            </div>
+        </div>
+        
+        <div id="dash-modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+            <div style="background: white; width: 90%; max-width: 600px; border-radius: 15px; overflow: hidden; position: relative;">
+                <div id="modal-header" style="padding: 15px 20px; color: white; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 id="modal-title" style="margin: 0;">Details</h3>
+                    <button onclick="closeDashboardModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                </div>
+                <div id="modal-body" style="padding: 20px; max-height: 70vh; overflow-y: auto;"></div>
+            </div>
+        </div>
+        </div>
+        
+        <style>
+            @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        </style>
+        <div style="display:none;">
+            <div id="list-courses"></div>
+            <div id="list-grievances"></div>
+            <div id="list-orders"></div>
+            <div id="list-vet"></div>
+            <div id="list-certificates"></div>
         </div>
     </section>
 
@@ -124,7 +142,7 @@
         </div>
     </div>
 
-    <script type="module" src="app.js"></script>
+    
     <script>
         // Photo to Base64 Converter Script
         document.getElementById('prof-pic-upload').addEventListener('change', function(e) {
@@ -212,5 +230,47 @@
             </div>
         </div>
     </footer>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'hi,en', // Restrict to Hindi and English for DDP Saharsa
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+          }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="module" src="app.js"></script>
+    <script>
+        // Function to open modal and fetch live Firebase data
+        window.openDashboardModal = (type) => {
+    const overlay = document.getElementById('dash-modal-overlay');
+    const title = document.getElementById('modal-title');
+    const header = document.getElementById('modal-header');
+    const body = document.getElementById('modal-body');
+
+    const configs = {
+        'modal-academy': { title: '📚 Academy Progress', color: '#2980b9', targetId: 'list-courses' },
+        'modal-grievance': { title: '🚩 Filed Grievance', color: '#8e44ad', targetId: 'list-grievances' },
+        'modal-pharmacy': { title: '🛒 Pharmacy Orders', color: '#27ae60', targetId: 'list-orders' },
+        'modal-vet': { title: '🚑 Vet Requests', color: '#c0392b', targetId: 'list-vet' },
+        'modal-cert': { title: '🎓 Certificates', color: '#9b59b6', targetId: 'list-certificates' }
+    };
+
+    const config = configs[type];
+    title.innerText = config.title;
+    header.style.backgroundColor = config.color;
+    
+    // We get the data that app.js has already loaded into hidden/static containers
+    const existingData = document.getElementById(config.targetId);
+    body.innerHTML = existingData ? existingData.innerHTML : "<p>No records found.</p>";
+    
+    overlay.style.display = 'flex';
+};
+
+function closeDashboardModal() {
+    document.getElementById('dash-modal-overlay').style.display = 'none';
+}</script>
 </body>
 </html>
