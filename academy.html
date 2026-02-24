@@ -36,9 +36,15 @@
                 <li><a href="gallery.html">Gallery</a></li>
                 <li><a href="franchise.html">Franchise</a></li>
             </ul>
-            <div class="nav-auth">
+            <div class="nav-auth-wrapper">
+                <div id="google_translate_element" style="margin-right: 15px;"></div>
+                
+                <a href="pharmacy.html" class="cart-icon-wrapper">
+                    <span id="cart-badge">0</span> 🛒
+                </a>
+                <a href="admin.html" id="admin-link-nav" style="display:none; font-weight:bold; color:#c0392b; margin-right:15px; text-decoration:none;">⚙️ Admin Panel</a>
+                <span id="user-email" style="display:none; font-weight:bold; color:#27ae60; font-size:14px; margin-right:10px;"></span>
                 <button id="login-btn" onclick="window.showLogin()">Login</button>
-                <span id="user-email" style="display:none;"></span>
                 <button id="logout-btn" onclick="window.handleLogout()" style="display:none;">Logout</button>
             </div>
         </div>
@@ -58,36 +64,14 @@
             </div>
         </div>
 
-        <aside>
-            <div style="background: white; padding: 30px; border-radius: 12px; border: 1px solid #ddd; position: sticky; top: 100px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-                <h3 style="color: #2980b9; margin-top: 0;">Online Admission 2026</h3>
-                <p style="font-size: 0.9rem; color: #666;">Fill this form to apply for our upcoming residential training batch.</p>
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Student Name</label>
-                <input type="text" id="adm-name" class="swal2-input" style="width: 100%; margin: 0 0 15px 0;" placeholder="Enter full name">
-                
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Phone Number</label>
-                <input type="text" id="adm-phone" class="swal2-input" style="width: 100%; margin: 0 0 15px 0;" placeholder="Contact number">
-
-                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Select Course</label>
-                <select id="adm-course" style="width: 100%; padding: 12px; border: 1px solid #d9d9d9; border-radius: 5px; margin-bottom: 20px;">
-                    <option value="Dairy Farm Management">Dairy Farm Management</option>
-                    <option value="Artificial Insemination">Artificial Insemination</option>
-                    <option value="Milk Quality Control">Milk Quality Control</option>
-                </select>
-
-                <button onclick="window.applyAdmission()" style="width: 100%; background: #2980b9; color: white; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Submit Application</button>
-            </div>
-        </aside>
+        
     </div>
 
    
     
 
     <div class="side-enquiry" onclick="window.showEnquiry()"><span>📩 Enquire Now</span></div>
-    <script type="module" src="app.js"></script>
-     <script type="module" src="app.js?v=3"></script>
+    
      <footer class="main-footer">
         <div class="footer-container">
             <div class="footer-col">
@@ -158,5 +142,17 @@
             </div>
         </div>
     </footer>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+          new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'hi,en', // Restrict to Hindi and English for DDP Saharsa
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false
+          }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
